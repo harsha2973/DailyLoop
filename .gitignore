@@ -1,0 +1,10 @@
+node_modules/
+android/
+ios/
+*.log
+.gradle/
+build/
+.idea/
+*.iml
+*.apk
+
