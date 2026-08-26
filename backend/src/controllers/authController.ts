@@ -49,13 +49,13 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     // password has `select: false` on the schema, so it must be explicitly requested
     const user = await User.findOne({ email: email.toLowerCase() }).select('+password');
     if (!user) {
-      res.status(401).json({ message: 'Invalid email or password' });
+      res.status(404).json({ message: 'Account does not exist. Please sign up.' });
       return;
     }
 
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
-      res.status(401).json({ message: 'Invalid email or password' });
+      res.status(401).json({ message: 'Wrong password' });
       return;
     }
 

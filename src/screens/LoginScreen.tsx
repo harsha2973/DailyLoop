@@ -58,7 +58,19 @@ export const LoginScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
 
           {/* Form Card */}
           <View style={styles.formCard}>
-            {error && <Text style={styles.errorText}>{error}</Text>}
+            {error && (
+              <View style={styles.errorBox}>
+                <Text style={styles.errorText}>{error}</Text>
+                {error.toLowerCase().includes('sign up') && (
+                  <TouchableOpacity
+                    style={styles.signupButton}
+                    onPress={() => navigation.navigate('Register')}
+                  >
+                    <Text style={styles.signupButtonText}>Create Account / Sign Up →</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+            )}
 
             {/* Email Field */}
             <View style={styles.fieldGroup}>
@@ -169,11 +181,32 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
   },
+  errorBox: {
+    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+    borderRadius: radius.sm,
+    padding: spacing.md,
+    marginBottom: spacing.md,
+    borderWidth: 1,
+    borderColor: 'rgba(239, 68, 68, 0.3)',
+    alignItems: 'center',
+  },
   errorText: {
     color: colors.danger,
     ...typography.bodySm,
-    marginBottom: spacing.md,
     textAlign: 'center',
+    fontWeight: '500',
+  },
+  signupButton: {
+    marginTop: spacing.xs + 4,
+    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.sm,
+    backgroundColor: colors.primary,
+    borderRadius: radius.sm,
+  },
+  signupButtonText: {
+    color: colors.onPrimary,
+    ...typography.caption,
+    fontWeight: '600',
   },
   fieldGroup: {
     marginBottom: spacing.md,
