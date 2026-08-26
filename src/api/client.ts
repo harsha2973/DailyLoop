@@ -5,7 +5,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
  * Base URL for the backend API.
  * Uses public HTTPS tunnel URL for universal device & recruiter access.
  */
-export const API_BASE_URL = 'https://a6309e9e935216.lhr.life/api';
+export const API_BASE_URL = 'https://dailyloop-to-do-app.onrender.com/api';
 
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,
