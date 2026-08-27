@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   StyleSheet,
   Text,
@@ -12,17 +12,29 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { useAuth } from '../context/AuthContext';
-import { colors, radius, spacing, typography } from '../theme/colors';
+import { useTheme } from '../theme/ThemeContext';
+import { radius, spacing, fontFamilies, shadows } from '../theme/colors';
 
-export const RegisterScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
+export const RegisterScreen: React.FC<{ navigation: any; route?: any }> = ({
+  navigation,
+  route,
+}) => {
   const { register } = useAuth();
+  const { theme } = useTheme();
 
+  const initialEmail = route?.params?.email || '';
   const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState(initialEmail);
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (route?.params?.email) {
+      setEmail(route.params.email);
+    }
+  }, [route?.params?.email]);
 
   const handleRegister = async () => {
     setError(null);
@@ -42,7 +54,7 @@ export const RegisterScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
   };
 
   return (
-    <SafeAreaView style={styles.flex}>
+    <SafeAreaView style={[styles.flex, { backgroundColor: theme.background }]}>
       <KeyboardAvoidingView
         style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -50,25 +62,31 @@ export const RegisterScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
         <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
           {/* Header */}
           <View style={styles.header}>
-            <View style={styles.logoBadge}>
-              <Text style={styles.logoMark}>∞</Text>
+            <View style={[styles.logoBadge, { backgroundColor: theme.primaryButton }, shadows.sm]}>
+              <Text style={[styles.logoMark, { color: theme.primaryButtonText }]}>∞</Text>
             </View>
-            <Text style={styles.title}>Join DailyLoop</Text>
-            <Text style={styles.subtitle}>Plan less. Do more.</Text>
+            <Text style={[styles.title, { color: theme.textPrimary }]}>Join DailyLoop</Text>
+            <Text style={[styles.subtitle, { color: theme.textSecondary }]}>
+              Plan less. Do more.
+            </Text>
           </View>
 
           {/* Form Card */}
-          <View style={styles.formCard}>
-            {error && <Text style={styles.errorText}>{error}</Text>}
+          <View style={[styles.formCard, { backgroundColor: theme.surface, borderColor: theme.border }, shadows.md]}>
+            {error && (
+              <View style={[styles.errorBox, { borderColor: theme.priorityHigh }]}>
+                <Text style={[styles.errorText, { color: theme.priorityHigh }]}>{error}</Text>
+              </View>
+            )}
 
             {/* Name Field */}
             <View style={styles.fieldGroup}>
-              <Text style={styles.label}>FULL NAME</Text>
-              <View style={styles.inputContainer}>
+              <Text style={[styles.label, { color: theme.textMuted }]}>FULL NAME</Text>
+              <View style={[styles.inputContainer, { backgroundColor: theme.surfaceSecondary, borderColor: theme.border }]}>
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, { color: theme.textPrimary }]}
                   placeholder="Harsha Gowda"
-                  placeholderTextColor={colors.textMuted}
+                  placeholderTextColor={theme.textMuted}
                   value={name}
                   onChangeText={setName}
                 />
@@ -77,12 +95,12 @@ export const RegisterScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
 
             {/* Email Field */}
             <View style={styles.fieldGroup}>
-              <Text style={styles.label}>EMAIL</Text>
-              <View style={styles.inputContainer}>
+              <Text style={[styles.label, { color: theme.textMuted }]}>EMAIL</Text>
+              <View style={[styles.inputContainer, { backgroundColor: theme.surfaceSecondary, borderColor: theme.border }]}>
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, { color: theme.textPrimary }]}
                   placeholder="name@example.com"
-                  placeholderTextColor={colors.textMuted}
+                  placeholderTextColor={theme.textMuted}
                   value={email}
                   onChangeText={setEmail}
                   autoCapitalize="none"
@@ -93,33 +111,37 @@ export const RegisterScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
 
             {/* Password Field */}
             <View style={styles.fieldGroup}>
-              <Text style={styles.label}>PASSWORD</Text>
-              <View style={styles.inputContainer}>
+              <Text style={[styles.label, { color: theme.textMuted }]}>PASSWORD</Text>
+              <View style={[styles.inputContainer, { backgroundColor: theme.surfaceSecondary, borderColor: theme.border }]}>
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, { color: theme.textPrimary }]}
                   placeholder="At least 6 characters"
-                  placeholderTextColor={colors.textMuted}
+                  placeholderTextColor={theme.textMuted}
                   value={password}
                   onChangeText={setPassword}
                   secureTextEntry={!showPassword}
                 />
                 <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeToggle}>
-                  <Text style={styles.eyeText}>{showPassword ? 'Hide' : 'Show'}</Text>
+                  <Text style={[styles.eyeText, { color: theme.textSecondary }]}>
+                    {showPassword ? 'Hide' : 'Show'}
+                  </Text>
                 </TouchableOpacity>
               </View>
             </View>
 
             {/* Submit Button */}
             <TouchableOpacity
-              style={styles.primaryButton}
+              style={[styles.primaryButton, { backgroundColor: theme.primaryButton }, shadows.sm]}
               onPress={handleRegister}
               disabled={loading}
               activeOpacity={0.85}
             >
               {loading ? (
-                <ActivityIndicator color={colors.onPrimary} />
+                <ActivityIndicator color={theme.primaryButtonText} />
               ) : (
-                <Text style={styles.primaryButtonText}>Create Account</Text>
+                <Text style={[styles.primaryButtonText, { color: theme.primaryButtonText }]}>
+                  Create Account
+                </Text>
               )}
             </TouchableOpacity>
 
@@ -128,8 +150,8 @@ export const RegisterScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
               onPress={() => navigation.navigate('Login')}
               style={styles.loginLink}
             >
-              <Text style={styles.loginText}>
-                Already have an account? <Text style={styles.loginBold}>Log in</Text>
+              <Text style={[styles.loginText, { color: theme.textSecondary }]}>
+                Already have an account? <Text style={[styles.loginBold, { color: theme.textPrimary }]}>Log in</Text>
               </Text>
             </TouchableOpacity>
           </View>
@@ -140,9 +162,9 @@ export const RegisterScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
 };
 
 const styles = StyleSheet.create({
-  flex: { flex: 1, backgroundColor: colors.background },
+  flex: { flex: 1 },
   container: {
-    padding: spacing.containerPadding, // 24dp
+    padding: spacing.containerPadding,
     justifyContent: 'center',
     flexGrow: 1,
   },
@@ -153,102 +175,98 @@ const styles = StyleSheet.create({
   logoBadge: {
     width: 52,
     height: 52,
-    borderRadius: radius.md,
-    backgroundColor: colors.primary,
+    borderRadius: 26,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: spacing.md,
   },
   logoMark: {
-    fontSize: 28,
+    fontFamily: fontFamilies.headingBold,
+    fontSize: 26,
     fontWeight: '700',
-    color: colors.onPrimary,
   },
   title: {
-    ...typography.displayLarge,
-    fontSize: 24,
-    color: colors.textPrimary,
+    fontFamily: fontFamilies.headingBold,
+    fontSize: 26,
+    fontWeight: '700',
     textAlign: 'center',
   },
   subtitle: {
-    ...typography.body,
+    fontFamily: fontFamilies.body,
     fontSize: 14,
-    color: colors.textSecondary,
     textAlign: 'center',
     marginTop: 4,
   },
   formCard: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.md,
+    borderRadius: radius.xl, // 32px curved radius
     padding: spacing.lg,
     borderWidth: 1,
-    borderColor: colors.border,
+  },
+  errorBox: {
+    borderRadius: radius.sm,
+    padding: spacing.md,
+    marginBottom: spacing.md,
+    borderWidth: 1,
+    alignItems: 'center',
   },
   errorText: {
-    color: colors.danger,
-    ...typography.bodySm,
-    marginBottom: spacing.md,
+    fontFamily: fontFamilies.body,
+    fontSize: 12,
     textAlign: 'center',
   },
   fieldGroup: {
     marginBottom: spacing.md,
   },
   label: {
-    ...typography.caption,
+    fontFamily: fontFamilies.body,
     fontSize: 11,
-    color: colors.textMuted,
     marginBottom: spacing.xs,
     letterSpacing: 0.5,
+    fontWeight: '500',
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.backgroundSecondary,
-    borderRadius: radius.sm,
+    borderRadius: radius.lg,
     borderWidth: 1,
-    borderColor: colors.border,
-    height: 46,
+    height: 48,
     paddingHorizontal: spacing.md,
   },
   input: {
     flex: 1,
-    ...typography.body,
+    fontFamily: fontFamilies.body,
     fontSize: 14,
-    color: colors.textPrimary,
     paddingVertical: 0,
   },
   eyeToggle: {
     padding: spacing.xs,
   },
   eyeText: {
-    ...typography.caption,
-    color: colors.textSecondary,
+    fontFamily: fontFamilies.body,
     fontSize: 12,
   },
   primaryButton: {
-    backgroundColor: colors.primary,
     height: 48,
-    borderRadius: radius.sm,
+    borderRadius: radius.pill,
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: spacing.md,
     marginBottom: spacing.sm,
   },
   primaryButtonText: {
-    ...typography.title,
-    color: colors.onPrimary,
+    fontFamily: fontFamilies.body,
     fontSize: 15,
+    fontWeight: '600',
   },
   loginLink: {
     alignItems: 'center',
     paddingVertical: spacing.sm,
   },
   loginText: {
-    ...typography.bodySm,
-    color: colors.textSecondary,
+    fontFamily: fontFamilies.body,
+    fontSize: 13,
   },
   loginBold: {
     fontWeight: '600',
-    color: colors.textPrimary,
   },
 });

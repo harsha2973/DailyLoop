@@ -1,7 +1,22 @@
-import React from 'react';
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { colors, radius, spacing } from '../theme/colors';
+import React, { useEffect, useRef } from 'react';
+import {
+  Animated,
+  LayoutAnimation,
+  Platform,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  UIManager,
+  View,
+} from 'react-native';
+import Icon from 'react-native-vector-icons/Feather';
+import { useTheme } from '../theme/ThemeContext';
+import { radius, spacing, shadows, fontFamilies } from '../theme/colors';
 import { FilterMode, SortMode } from '../types';
+
+if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
 
 interface Props {
   filterMode: FilterMode;
@@ -10,105 +25,134 @@ interface Props {
   onSortChange: (mode: SortMode) => void;
 }
 
-const FILTERS: { key: FilterMode; label: string }[] = [
-  { key: 'all', label: 'All' },
-  { key: 'active', label: 'Active' },
-  { key: 'completed', label: 'Done' },
+const FILTERS: { key: FilterMode; label: string; icon: string }[] = [
+  { key: 'active', label: 'To do', icon: 'disc' },
+  { key: 'completed', label: 'Completed', icon: 'check-circle' },
+  { key: 'all', label: 'All Tasks', icon: 'list' },
 ];
 
-const SORTS: { key: SortMode; label: string }[] = [
-  { key: 'smart', label: 'Smart' },
-  { key: 'deadline', label: 'Deadline' },
-  { key: 'priority', label: 'Priority' },
-  { key: 'dateTime', label: 'Scheduled' },
-];
+const AnimatedFilterItem: React.FC<{
+  filter: { key: FilterMode; label: string; icon: string };
+  active: boolean;
+  onPress: () => void;
+  theme: any;
+}> = ({ filter, active, onPress, theme }) => {
+  const anim = useRef(new Animated.Value(active ? 1 : 0)).current;
 
-const Chip: React.FC<{ label: string; active: boolean; onPress: () => void }> = ({
-  label,
-  active,
-  onPress,
-}) => (
-  <TouchableOpacity
-    onPress={onPress}
-    style={[styles.chip, active && styles.chipActive]}
-    activeOpacity={0.8}
-  >
-    <Text style={[styles.chipText, active && styles.chipTextActive]}>{label}</Text>
-  </TouchableOpacity>
-);
+  useEffect(() => {
+    Animated.spring(anim, {
+      toValue: active ? 1 : 0,
+      useNativeDriver: false,
+      friction: 7,
+      tension: 100,
+    }).start();
+  }, [active, anim]);
+
+  const scale = anim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0.96, 1],
+  });
+
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      activeOpacity={0.85}
+      style={styles.pillItemWrapper}
+    >
+      <Animated.View
+        style={[
+          styles.pillItem,
+          {
+            transform: [{ scale }],
+            backgroundColor: active ? theme.primaryButton : 'transparent',
+          },
+          active && shadows.sm,
+        ]}
+      >
+        <Icon
+          name={filter.icon}
+          size={14}
+          color={active ? theme.primaryButtonText : theme.textSecondary}
+          style={styles.pillIcon}
+        />
+        <Text
+          style={[
+            styles.pillText,
+            { color: active ? theme.primaryButtonText : theme.textSecondary },
+            active && styles.pillTextActive,
+          ]}
+        >
+          {filter.label}
+        </Text>
+      </Animated.View>
+    </TouchableOpacity>
+  );
+};
 
 export const FilterBar: React.FC<Props> = ({
   filterMode,
-  sortMode,
   onFilterChange,
-  onSortChange,
 }) => {
-  return (
-    <View>
-      <View style={styles.row}>
-        {FILTERS.map((f) => (
-          <Chip
-            key={f.key}
-            label={f.label}
-            active={filterMode === f.key}
-            onPress={() => onFilterChange(f.key)}
-          />
-        ))}
-      </View>
+  const { theme } = useTheme();
 
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        style={styles.sortScroll}
-        contentContainerStyle={{ paddingRight: spacing.md }}
-      >
-        <Text style={styles.sortLabel}>Sort:</Text>
-        {SORTS.map((s) => (
-          <Chip
-            key={s.key}
-            label={s.label}
-            active={sortMode === s.key}
-            onPress={() => onSortChange(s.key)}
+  const handleSelect = (key: FilterMode) => {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    onFilterChange(key);
+  };
+
+  return (
+    <View
+      style={[
+        styles.pillContainer,
+        { backgroundColor: theme.surfaceSecondary, borderColor: theme.border },
+      ]}
+    >
+      {FILTERS.map((f) => {
+        const active = filterMode === f.key;
+
+        return (
+          <AnimatedFilterItem
+            key={f.key}
+            filter={f}
+            active={active}
+            onPress={() => handleSelect(f.key)}
+            theme={theme}
           />
-        ))}
-      </ScrollView>
+        );
+      })}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  row: {
+  pillContainer: {
     flexDirection: 'row',
-    marginBottom: spacing.sm,
-  },
-  sortScroll: {
+    alignItems: 'center',
+    borderRadius: radius.pill,
+    padding: 5,
+    borderWidth: 1,
     marginBottom: spacing.md,
   },
-  sortLabel: {
-    color: colors.textMuted,
-    fontSize: 12,
-    alignSelf: 'center',
-    marginRight: spacing.sm,
+  pillItemWrapper: {
+    flex: 1,
   },
-  chip: {
+  pillItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 9,
+    paddingHorizontal: 10,
     borderRadius: radius.pill,
-    paddingHorizontal: spacing.md,
-    paddingVertical: 6,
-    marginRight: spacing.sm,
-    backgroundColor: colors.surfaceContainerLow,
-    borderWidth: 1,
-    borderColor: colors.border,
   },
-  chipActive: {
-    backgroundColor: colors.accentMuted,
-    borderColor: colors.accent,
+  pillIcon: {
+    marginRight: 6,
   },
-  chipText: {
-    color: colors.textSecondary,
-    fontSize: 12,
-    fontWeight: '600',
+  pillText: {
+    fontFamily: fontFamilies.body,
+    fontSize: 13,
+    fontWeight: '500',
   },
-  chipTextActive: {
-    color: colors.accent,
+  pillTextActive: {
+    fontWeight: '700',
   },
 });

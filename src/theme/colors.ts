@@ -1,9 +1,17 @@
-/**
- * DailyLoop Productivity Suite — Central Theme System
- * Supports 2 visual themes:
- * 1. Dark (darkTheme)
- * 2. Light (lightTheme)
- */
+import { Platform } from 'react-native';
+
+const headingFont = Platform.OS === 'ios' ? 'Glacial Indifference' : 'GlacialIndifference-Bold';
+const headingRegularFont = Platform.OS === 'ios' ? 'Glacial Indifference' : 'GlacialIndifference-Regular';
+const headingItalicFont = Platform.OS === 'ios' ? 'Glacial Indifference' : 'GlacialIndifference-Italic';
+const bodyFont = Platform.OS === 'ios' ? 'Helvetica Now Display' : 'Helvetica';
+
+export const fontFamilies = {
+  heading: headingFont,
+  headingBold: headingFont,
+  headingRegular: headingRegularFont,
+  headingItalic: headingItalicFont,
+  body: bodyFont,
+};
 
 export interface ThemePalette {
   name: 'dark' | 'light';
@@ -11,6 +19,7 @@ export interface ThemePalette {
   background: string;
   backgroundSecondary: string;
   surface: string;
+  surfaceSecondary: string;
   surfaceContainer: string;
   surfaceContainerLow: string;
   surfaceContainerHigh: string;
@@ -26,6 +35,7 @@ export interface ThemePalette {
   textMuted: string;
   textDisabled: string;
   border: string;
+  borderStrong: string;
   borderPrimary: string;
   borderSecondary: string;
   divider: string;
@@ -68,6 +78,7 @@ export const darkTheme: ThemePalette = {
   background: '#0D0D0D',
   backgroundSecondary: '#121212',
   surface: '#1A1A1A',
+  surfaceSecondary: '#242424',
   surfaceContainer: '#121212',
   surfaceContainerLow: '#0D0D0D',
   surfaceContainerHigh: '#222222',
@@ -83,6 +94,7 @@ export const darkTheme: ThemePalette = {
   textMuted: '#686868',
   textDisabled: '#4A4A4A',
   border: '#282828',
+  borderStrong: '#444444',
   borderPrimary: '#282828',
   borderSecondary: '#202020',
   divider: '#202020',
@@ -125,6 +137,7 @@ export const lightTheme: ThemePalette = {
   background: '#F7F6F3',
   backgroundSecondary: '#F1F1EF',
   surface: '#FFFFFF',
+  surfaceSecondary: '#F1F1EF',
   surfaceContainer: '#F1F1EF',
   surfaceContainerLow: '#F7F6F3',
   surfaceContainerHigh: '#EFEFEF',
@@ -140,6 +153,7 @@ export const lightTheme: ThemePalette = {
   textMuted: '#9B9A97',
   textDisabled: '#C4C4C0',
   border: '#E9E9E7',
+  borderStrong: '#D3D3D0',
   borderPrimary: '#E9E9E7',
   borderSecondary: '#E6E6E4',
   divider: '#E6E6E4',
@@ -175,12 +189,50 @@ export const lightTheme: ThemePalette = {
   fabIcon: '#FFFFFF',
 };
 
-// Aliases
-export const darkGlassTheme = darkTheme;
-export const darkMinimalTheme = darkTheme;
-export const lightMinimalTheme = lightTheme;
-export const colors = darkTheme;
+// Colors helper object that supports both colors.dark/colors.light AND direct property access
+export const colors = {
+  ...darkTheme,
+  dark: darkTheme,
+  light: lightTheme,
+};
 
+// Corner Radii Tokens
+export const radius = {
+  none: 0,
+  xs: 8,
+  sm: 12,
+  md: 18,
+  lg: 24,
+  xl: 32,
+  pill: 999,
+};
+
+// Drop Shadows Helper
+export const shadows = {
+  sm: {
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  md: {
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.1,
+    shadowRadius: 14,
+    elevation: 5,
+  },
+  lg: {
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.15,
+    shadowRadius: 20,
+    elevation: 8,
+  },
+};
+
+// Spacing Tokens
 export const spacing = {
   xs: 4,
   sm: 8,
@@ -190,25 +242,32 @@ export const spacing = {
   containerPadding: 24,
 };
 
-export const radius = {
-  xs: 4,
-  sm: 8,
-  md: 12,
-  lg: 16,
-  xl: 24,
-  pill: 999,
-};
-
-export const fontFamilies = {
-  heading: 'Manrope',
-  body: 'Inter',
-};
-
+// Typography Tokens
 export const typography = {
-  displayLarge: { fontFamily: fontFamilies.heading, fontSize: 26, fontWeight: '700' as const, letterSpacing: -0.4 },
-  display: { fontFamily: fontFamilies.heading, fontSize: 22, fontWeight: '700' as const, letterSpacing: -0.2 },
-  title: { fontFamily: fontFamilies.heading, fontSize: 16, fontWeight: '600' as const },
-  body: { fontFamily: fontFamilies.body, fontSize: 15, fontWeight: '400' as const },
-  bodySm: { fontFamily: fontFamilies.body, fontSize: 13, fontWeight: '400' as const },
-  caption: { fontFamily: fontFamilies.body, fontSize: 12, fontWeight: '500' as const, letterSpacing: 0.3 },
+  displayLarge: {
+    fontFamily: fontFamilies.headingBold,
+    fontSize: 26,
+    fontWeight: '700' as const,
+    letterSpacing: -0.5,
+  },
+  title: {
+    fontFamily: fontFamilies.headingBold,
+    fontSize: 18,
+    fontWeight: '600' as const,
+  },
+  body: {
+    fontFamily: fontFamilies.body,
+    fontSize: 14,
+    fontWeight: '400' as const,
+  },
+  bodySm: {
+    fontFamily: fontFamilies.body,
+    fontSize: 13,
+    fontWeight: '400' as const,
+  },
+  caption: {
+    fontFamily: fontFamilies.body,
+    fontSize: 11,
+    fontWeight: '500' as const,
+  },
 };

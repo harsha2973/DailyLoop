@@ -12,16 +12,37 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { useAuth } from '../context/AuthContext';
-import { colors, radius, spacing, typography } from '../theme/colors';
+import { useTheme } from '../theme/ThemeContext';
+import { radius, spacing, fontFamilies, shadows } from '../theme/colors';
+import { AuthDialogModal } from '../components/AuthDialogModal';
 
 export const LoginScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const { login } = useAuth();
+  const { theme } = useTheme();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  const [dialogConfig, setDialogConfig] = useState<{
+    visible: boolean;
+    type: 'account_not_found' | 'invalid_password' | 'info';
+    title: string;
+    message: string;
+    primaryButtonText: string;
+    onPrimaryPress: () => void;
+    secondaryButtonText?: string;
+    onSecondaryPress?: () => void;
+  }>({
+    visible: false,
+    type: 'info',
+    title: '',
+    message: '',
+    primaryButtonText: 'OK',
+    onPrimaryPress: () => {},
+  });
 
   const handleLogin = async () => {
     setError(null);
@@ -34,39 +55,83 @@ export const LoginScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
     try {
       await login(email.trim(), password);
     } catch (err: any) {
-      setError(err.message || 'Login failed. Check your credentials.');
+      const isNotFound =
+        err.status === 404 ||
+        err.message?.toLowerCase().includes('not exist') ||
+        err.message?.toLowerCase().includes('sign up');
+
+      const isWrongPassword =
+        err.status === 401 ||
+        err.message?.toLowerCase().includes('wrong password') ||
+        err.message?.toLowerCase().includes('incorrect');
+
+      if (isNotFound) {
+        setDialogConfig({
+          visible: true,
+          type: 'account_not_found',
+          title: 'Account Not Found',
+          message: `No registered account exists with email "${email.trim()}". Would you like to create a new account instead?`,
+          primaryButtonText: 'Create Account',
+          onPrimaryPress: () => {
+            setDialogConfig((prev) => ({ ...prev, visible: false }));
+            navigation.navigate('Register', { email: email.trim() });
+          },
+          secondaryButtonText: 'Cancel',
+          onSecondaryPress: () => {
+            setDialogConfig((prev) => ({ ...prev, visible: false }));
+          },
+        });
+      } else if (isWrongPassword) {
+        setDialogConfig({
+          visible: true,
+          type: 'invalid_password',
+          title: 'Incorrect Password',
+          message: `The password you entered for "${email.trim()}" is incorrect. Please check your credentials and try again.`,
+          primaryButtonText: 'Try Again',
+          onPrimaryPress: () => {
+            setDialogConfig((prev) => ({ ...prev, visible: false }));
+            setPassword('');
+          },
+        });
+      } else {
+        setError(err.message || 'Login failed. Check your network or credentials.');
+      }
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <SafeAreaView style={styles.flex}>
+    <SafeAreaView style={[styles.flex, { backgroundColor: theme.background }]}>
       <KeyboardAvoidingView
         style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
-          {/* DailyLoop Header */}
+          {/* Header */}
           <View style={styles.header}>
-            <View style={styles.logoBadge}>
-              <Text style={styles.logoMark}>∞</Text>
+            <View style={[styles.logoBadge, { backgroundColor: theme.primaryButton }, shadows.sm]}>
+              <Text style={[styles.logoMark, { color: theme.primaryButtonText }]}>∞</Text>
             </View>
-            <Text style={styles.title}>Sign in to DailyLoop</Text>
-            <Text style={styles.subtitle}>Plan less. Do more.</Text>
+            <Text style={[styles.title, { color: theme.textPrimary }]}>Sign in to DailyLoop</Text>
+            <Text style={[styles.subtitle, { color: theme.textSecondary }]}>
+              Plan less. Do more.
+            </Text>
           </View>
 
           {/* Form Card */}
-          <View style={styles.formCard}>
+          <View style={[styles.formCard, { backgroundColor: theme.surface, borderColor: theme.border }, shadows.md]}>
             {error && (
-              <View style={styles.errorBox}>
-                <Text style={styles.errorText}>{error}</Text>
+              <View style={[styles.errorBox, { borderColor: theme.priorityHigh }]}>
+                <Text style={[styles.errorText, { color: theme.priorityHigh }]}>{error}</Text>
                 {error.toLowerCase().includes('sign up') && (
                   <TouchableOpacity
-                    style={styles.signupButton}
-                    onPress={() => navigation.navigate('Register')}
+                    style={[styles.signupButton, { backgroundColor: theme.primaryButton }]}
+                    onPress={() => navigation.navigate('Register', { email: email.trim() })}
                   >
-                    <Text style={styles.signupButtonText}>Create Account / Sign Up →</Text>
+                    <Text style={[styles.signupButtonText, { color: theme.primaryButtonText }]}>
+                      Create Account / Sign Up →
+                    </Text>
                   </TouchableOpacity>
                 )}
               </View>
@@ -74,12 +139,12 @@ export const LoginScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
 
             {/* Email Field */}
             <View style={styles.fieldGroup}>
-              <Text style={styles.label}>EMAIL</Text>
-              <View style={styles.inputContainer}>
+              <Text style={[styles.label, { color: theme.textMuted }]}>EMAIL</Text>
+              <View style={[styles.inputContainer, { backgroundColor: theme.surfaceSecondary, borderColor: theme.border }]}>
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, { color: theme.textPrimary }]}
                   placeholder="name@example.com"
-                  placeholderTextColor={colors.textMuted}
+                  placeholderTextColor={theme.textMuted}
                   value={email}
                   onChangeText={setEmail}
                   autoCapitalize="none"
@@ -90,56 +155,73 @@ export const LoginScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
 
             {/* Password Field */}
             <View style={styles.fieldGroup}>
-              <Text style={styles.label}>PASSWORD</Text>
-              <View style={styles.inputContainer}>
+              <Text style={[styles.label, { color: theme.textMuted }]}>PASSWORD</Text>
+              <View style={[styles.inputContainer, { backgroundColor: theme.surfaceSecondary, borderColor: theme.border }]}>
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, { color: theme.textPrimary }]}
                   placeholder="••••••••"
-                  placeholderTextColor={colors.textMuted}
+                  placeholderTextColor={theme.textMuted}
                   value={password}
                   onChangeText={setPassword}
                   secureTextEntry={!showPassword}
                 />
                 <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeToggle}>
-                  <Text style={styles.eyeText}>{showPassword ? 'Hide' : 'Show'}</Text>
+                  <Text style={[styles.eyeText, { color: theme.textSecondary }]}>
+                    {showPassword ? 'Hide' : 'Show'}
+                  </Text>
                 </TouchableOpacity>
               </View>
             </View>
 
             {/* Submit Button */}
             <TouchableOpacity
-              style={styles.primaryButton}
+              style={[styles.primaryButton, { backgroundColor: theme.primaryButton }, shadows.sm]}
               onPress={handleLogin}
               disabled={loading}
               activeOpacity={0.85}
             >
               {loading ? (
-                <ActivityIndicator color={colors.onPrimary} />
+                <ActivityIndicator color={theme.primaryButtonText} />
               ) : (
-                <Text style={styles.primaryButtonText}>Continue with Email</Text>
+                <Text style={[styles.primaryButtonText, { color: theme.primaryButtonText }]}>
+                  Continue with Email
+                </Text>
               )}
             </TouchableOpacity>
 
             {/* Secondary Register Link */}
             <TouchableOpacity
-              onPress={() => navigation.navigate('Register')}
+              onPress={() => navigation.navigate('Register', { email: email.trim() })}
               style={styles.registerLink}
             >
-              <Text style={styles.registerText}>
-                Don't have an account? <Text style={styles.registerBold}>Sign up</Text>
+              <Text style={[styles.registerText, { color: theme.textSecondary }]}>
+                Don't have an account? <Text style={[styles.registerBold, { color: theme.textPrimary }]}>Sign up</Text>
               </Text>
             </TouchableOpacity>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
+
+      {/* Authentication Dialogue Popup */}
+      <AuthDialogModal
+        visible={dialogConfig.visible}
+        type={dialogConfig.type}
+        title={dialogConfig.title}
+        message={dialogConfig.message}
+        primaryButtonText={dialogConfig.primaryButtonText}
+        onPrimaryPress={dialogConfig.onPrimaryPress}
+        secondaryButtonText={dialogConfig.secondaryButtonText}
+        onSecondaryPress={dialogConfig.onSecondaryPress}
+        onClose={() => setDialogConfig((prev) => ({ ...prev, visible: false }))}
+      />
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  flex: { flex: 1, backgroundColor: colors.background },
+  flex: { flex: 1 },
   container: {
-    padding: spacing.containerPadding, // 24dp
+    padding: spacing.containerPadding,
     justifyContent: 'center',
     flexGrow: 1,
   },
@@ -150,123 +232,109 @@ const styles = StyleSheet.create({
   logoBadge: {
     width: 52,
     height: 52,
-    borderRadius: radius.md,
-    backgroundColor: colors.primary,
+    borderRadius: 26,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: spacing.md,
   },
   logoMark: {
-    fontSize: 28,
+    fontFamily: fontFamilies.headingBold,
+    fontSize: 26,
     fontWeight: '700',
-    color: colors.onPrimary,
   },
   title: {
-    ...typography.displayLarge,
-    fontSize: 24,
-    color: colors.textPrimary,
+    fontFamily: fontFamilies.headingBold,
+    fontSize: 26,
+    fontWeight: '700',
     textAlign: 'center',
   },
   subtitle: {
-    ...typography.body,
+    fontFamily: fontFamilies.body,
     fontSize: 14,
-    color: colors.textSecondary,
     textAlign: 'center',
     marginTop: 4,
   },
   formCard: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.md,
+    borderRadius: radius.xl, // 32px curved radius
     padding: spacing.lg,
     borderWidth: 1,
-    borderColor: colors.border,
   },
   errorBox: {
-    backgroundColor: 'rgba(239, 68, 68, 0.1)',
     borderRadius: radius.sm,
     padding: spacing.md,
     marginBottom: spacing.md,
     borderWidth: 1,
-    borderColor: 'rgba(239, 68, 68, 0.3)',
     alignItems: 'center',
   },
   errorText: {
-    color: colors.danger,
-    ...typography.bodySm,
+    fontFamily: fontFamilies.body,
+    fontSize: 12,
     textAlign: 'center',
-    fontWeight: '500',
   },
   signupButton: {
     marginTop: spacing.xs + 4,
     paddingVertical: spacing.xs,
     paddingHorizontal: spacing.sm,
-    backgroundColor: colors.primary,
-    borderRadius: radius.sm,
+    borderRadius: radius.pill,
   },
   signupButtonText: {
-    color: colors.onPrimary,
-    ...typography.caption,
+    fontFamily: fontFamilies.body,
+    fontSize: 11,
     fontWeight: '600',
   },
   fieldGroup: {
     marginBottom: spacing.md,
   },
   label: {
-    ...typography.caption,
+    fontFamily: fontFamilies.body,
     fontSize: 11,
-    color: colors.textMuted,
     marginBottom: spacing.xs,
     letterSpacing: 0.5,
+    fontWeight: '500',
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.backgroundSecondary,
-    borderRadius: radius.sm,
+    borderRadius: radius.lg,
     borderWidth: 1,
-    borderColor: colors.border,
-    height: 46,
+    height: 48,
     paddingHorizontal: spacing.md,
   },
   input: {
     flex: 1,
-    ...typography.body,
+    fontFamily: fontFamilies.body,
     fontSize: 14,
-    color: colors.textPrimary,
     paddingVertical: 0,
   },
   eyeToggle: {
     padding: spacing.xs,
   },
   eyeText: {
-    ...typography.caption,
-    color: colors.textSecondary,
+    fontFamily: fontFamilies.body,
     fontSize: 12,
   },
   primaryButton: {
-    backgroundColor: colors.primary,
     height: 48,
-    borderRadius: radius.sm,
+    borderRadius: radius.pill,
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: spacing.md,
     marginBottom: spacing.sm,
   },
   primaryButtonText: {
-    ...typography.title,
-    color: colors.onPrimary,
+    fontFamily: fontFamilies.body,
     fontSize: 15,
+    fontWeight: '600',
   },
   registerLink: {
     alignItems: 'center',
     paddingVertical: spacing.sm,
   },
   registerText: {
-    ...typography.bodySm,
-    color: colors.textSecondary,
+    fontFamily: fontFamilies.body,
+    fontSize: 13,
   },
   registerBold: {
     fontWeight: '600',
-    color: colors.textPrimary,
   },
 });

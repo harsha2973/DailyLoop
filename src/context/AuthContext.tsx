@@ -21,7 +21,9 @@ type Action =
   | { type: 'AUTH_START' }
   | { type: 'AUTH_SUCCESS'; payload: { user: User; token: string } }
   | { type: 'AUTH_ERROR'; payload: string }
+  | { type: 'UPDATE_USER'; payload: User }
   | { type: 'LOGOUT' };
+
 
 const initialState: AuthState = {
   user: null,
@@ -35,7 +37,7 @@ function authReducer(state: AuthState, action: Action): AuthState {
     case 'RESTORE':
       return { ...state, ...action.payload, isLoading: false };
     case 'AUTH_START':
-      return { ...state, isLoading: true, error: null };
+      return { ...state, error: null };
     case 'AUTH_SUCCESS':
       return {
         ...state,
@@ -44,8 +46,10 @@ function authReducer(state: AuthState, action: Action): AuthState {
         isLoading: false,
         error: null,
       };
+    case 'UPDATE_USER':
+      return { ...state, user: action.payload };
     case 'AUTH_ERROR':
-      return { ...state, isLoading: false, error: action.payload };
+      return { ...state, error: action.payload };
     case 'LOGOUT':
       return { ...state, user: null, token: null, isLoading: false };
     default:
@@ -56,9 +60,11 @@ function authReducer(state: AuthState, action: Action): AuthState {
 interface AuthContextValue extends AuthState {
   login: (email: string, password: string) => Promise<void>;
   register: (name: string, email: string, password: string) => Promise<void>;
+  updateUser: (user: User) => Promise<void>;
   logout: () => Promise<void>;
   clearError: () => void;
 }
+
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
@@ -117,6 +123,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
+  const updateUser = async (user: User) => {
+    await AsyncStorage.setItem('authUser', JSON.stringify(user));
+    dispatch({ type: 'UPDATE_USER', payload: user });
+  };
+
   const logout = async () => {
     await AsyncStorage.multiRemove(['authToken', 'authUser']);
     dispatch({ type: 'LOGOUT' });
@@ -125,9 +136,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const clearError = () => dispatch({ type: 'AUTH_ERROR', payload: '' });
 
   const value = useMemo(
-    () => ({ ...state, login, register, logout, clearError }),
+    () => ({ ...state, login, register, updateUser, logout, clearError }),
     [state]
   );
+
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

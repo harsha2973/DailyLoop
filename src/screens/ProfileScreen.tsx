@@ -9,10 +9,11 @@ import {
   Switch,
   Alert,
 } from 'react-native';
+import Icon from 'react-native-vector-icons/Feather';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../theme/ThemeContext';
 import { useTasks } from '../context/TaskContext';
-import { radius, spacing, typography } from '../theme/colors';
+import { radius, spacing, fontFamilies, shadows } from '../theme/colors';
 import { Priority, SortMode } from '../types';
 
 export const ProfileScreen: React.FC<{ navigation?: any }> = ({ navigation }) => {
@@ -22,6 +23,16 @@ export const ProfileScreen: React.FC<{ navigation?: any }> = ({ navigation }) =>
 
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
 
+  const handleBackPress = () => {
+    if (navigation) {
+      if (navigation.canGoBack && navigation.canGoBack()) {
+        navigation.goBack();
+      } else {
+        navigation.navigate('Main');
+      }
+    }
+  };
+
   const confirmLogout = () => {
     Alert.alert('Sign Out', 'Are you sure you want to sign out of DailyLoop?', [
       { text: 'Cancel', style: 'cancel' },
@@ -30,29 +41,17 @@ export const ProfileScreen: React.FC<{ navigation?: any }> = ({ navigation }) =>
   };
 
   const handleEditProfile = () => {
-    Alert.alert(
-      'Edit Profile',
-      `Account Name: ${user?.name || 'Harsha Gowda'}\nEmail: ${user?.email || 'harsha@example.com'}`,
-      [{ text: 'Close', style: 'cancel' }]
-    );
+    if (navigation) {
+      navigation.navigate('EditProfile');
+    }
   };
 
   const handleChangePassword = () => {
-    Alert.alert(
-      'Change Password',
-      'Would you like to send a password reset link to your registered email address?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Send Reset Link',
-          onPress: () =>
-            Alert.alert('Email Sent', 'Password reset instructions have been sent to your email.'),
-        },
-      ]
-    );
+    if (navigation) {
+      navigation.navigate('ChangePassword');
+    }
   };
 
-  // Silent cycle Priority without alert dialog: High -> Medium -> Low -> High
   const handleCyclePriority = () => {
     const cycleMap: Record<Priority, Priority> = {
       high: 'medium',
@@ -63,7 +62,6 @@ export const ProfileScreen: React.FC<{ navigation?: any }> = ({ navigation }) =>
     setDefaultPriority(nextPriority);
   };
 
-  // Silent cycle Sorting without alert dialog: Smart -> Time -> Priority -> Smart
   const handleCycleSorting = () => {
     const cycleMap: Record<string, SortMode> = {
       smart: 'dateTime',
@@ -91,25 +89,24 @@ export const ProfileScreen: React.FC<{ navigation?: any }> = ({ navigation }) =>
   return (
     <SafeAreaView style={[styles.flex, { backgroundColor: theme.background }]}>
       {/* Top Back Navigation Bar */}
-      {navigation && (
-        <View style={[styles.topNavHeader, { borderBottomColor: theme.border }]}>
-          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-            <Text style={[styles.backText, { color: theme.textSecondary }]}>← Back</Text>
-          </TouchableOpacity>
-          <Text style={[styles.headerTitle, { color: theme.textPrimary }]}>Profile</Text>
-          <View style={styles.headerSpacer} />
-        </View>
-      )}
+      <View style={[styles.topNavHeader, { borderBottomColor: theme.border }]}>
+        <TouchableOpacity onPress={handleBackPress} style={styles.backBtn} activeOpacity={0.7}>
+          <Icon name="arrow-left" size={20} color={theme.textPrimary} />
+          <Text style={[styles.backText, { color: theme.textPrimary }]}>Back</Text>
+        </TouchableOpacity>
+        <Text style={[styles.headerTitle, { color: theme.textPrimary }]}>Profile</Text>
+        <View style={styles.headerSpacer} />
+      </View>
 
       <ScrollView contentContainerStyle={styles.container}>
         {/* User Card */}
         <TouchableOpacity
-          style={[styles.userCard, { backgroundColor: theme.surface, borderColor: theme.border }]}
+          style={[styles.userCard, { backgroundColor: theme.surface, borderColor: theme.border }, shadows.md]}
           onPress={handleEditProfile}
           activeOpacity={0.8}
         >
-          <View style={[styles.avatarBox, { backgroundColor: theme.primary }]}>
-            <Text style={[styles.avatarText, { color: theme.onPrimary }]}>
+          <View style={[styles.avatarBox, { backgroundColor: theme.primaryButton }]}>
+            <Text style={[styles.avatarText, { color: theme.primaryButtonText }]}>
               {user?.name ? user.name.charAt(0).toUpperCase() : 'H'}
             </Text>
           </View>
@@ -119,30 +116,28 @@ export const ProfileScreen: React.FC<{ navigation?: any }> = ({ navigation }) =>
           </View>
         </TouchableOpacity>
 
-        {/* Visual Theme Selector (Dark & Light) */}
+        {/* Visual Theme Selector */}
         <View style={styles.section}>
           <Text style={[styles.sectionHeader, { color: theme.textMuted }]}>VISUAL THEMES</Text>
-          <View style={[styles.menuCard, { backgroundColor: theme.surface, borderColor: theme.border }]}>
-            {/* Option 1: Dark */}
+          <View style={[styles.menuCard, { backgroundColor: theme.surface, borderColor: theme.border }, shadows.sm]}>
             <TouchableOpacity
               style={styles.themeOptionRow}
               onPress={() => setMode('dark')}
               activeOpacity={0.8}
             >
-              <Text style={[styles.menuText, { color: theme.textPrimary }]}>Dark</Text>
-              {mode === 'dark' && <Text style={[styles.checkActive, { color: theme.primary }]}>✓</Text>}
+              <Text style={[styles.menuText, { color: theme.textPrimary }]}>Dark Theme</Text>
+              {mode === 'dark' && <Text style={[styles.checkActive, { color: theme.accent }]}>✓</Text>}
             </TouchableOpacity>
 
             <View style={[styles.divider, { backgroundColor: theme.border }]} />
 
-            {/* Option 2: Light */}
             <TouchableOpacity
               style={styles.themeOptionRow}
               onPress={() => setMode('light')}
               activeOpacity={0.8}
             >
-              <Text style={[styles.menuText, { color: theme.textPrimary }]}>Light</Text>
-              {mode === 'light' && <Text style={[styles.checkActive, { color: theme.primary }]}>✓</Text>}
+              <Text style={[styles.menuText, { color: theme.textPrimary }]}>Light Theme</Text>
+              {mode === 'light' && <Text style={[styles.checkActive, { color: theme.accent }]}>✓</Text>}
             </TouchableOpacity>
           </View>
         </View>
@@ -150,7 +145,7 @@ export const ProfileScreen: React.FC<{ navigation?: any }> = ({ navigation }) =>
         {/* Account Section */}
         <View style={styles.section}>
           <Text style={[styles.sectionHeader, { color: theme.textMuted }]}>ACCOUNT</Text>
-          <View style={[styles.menuCard, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+          <View style={[styles.menuCard, { backgroundColor: theme.surface, borderColor: theme.border }, shadows.sm]}>
             <TouchableOpacity style={styles.menuItem} onPress={handleEditProfile} activeOpacity={0.7}>
               <Text style={[styles.menuText, { color: theme.textPrimary }]}>Edit Profile</Text>
               <Text style={[styles.chevron, { color: theme.textMuted }]}>›</Text>
@@ -168,20 +163,19 @@ export const ProfileScreen: React.FC<{ navigation?: any }> = ({ navigation }) =>
         {/* Preferences Section */}
         <View style={styles.section}>
           <Text style={[styles.sectionHeader, { color: theme.textMuted }]}>PREFERENCES</Text>
-          <View style={[styles.menuCard, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+          <View style={[styles.menuCard, { backgroundColor: theme.surface, borderColor: theme.border }, shadows.sm]}>
             <View style={styles.menuItemRow}>
               <Text style={[styles.menuText, { color: theme.textPrimary }]}>Notifications</Text>
               <Switch
                 value={notificationsEnabled}
                 onValueChange={setNotificationsEnabled}
-                trackColor={{ false: theme.border, true: theme.priorityLow }}
-                thumbColor={theme.primary}
+                trackColor={{ false: theme.border, true: theme.accentMuted }}
+                thumbColor={notificationsEnabled ? theme.accent : theme.textMuted}
               />
             </View>
 
             <View style={[styles.divider, { backgroundColor: theme.border }]} />
 
-            {/* Silent Cycle Default Priority */}
             <TouchableOpacity style={styles.menuItem} onPress={handleCyclePriority} activeOpacity={0.7}>
               <Text style={[styles.menuText, { color: theme.textPrimary }]}>Default Priority</Text>
               <Text style={[styles.menuValue, { color: theme.textSecondary }]}>
@@ -191,7 +185,6 @@ export const ProfileScreen: React.FC<{ navigation?: any }> = ({ navigation }) =>
 
             <View style={[styles.divider, { backgroundColor: theme.border }]} />
 
-            {/* Silent Cycle Default Sorting */}
             <TouchableOpacity style={styles.menuItem} onPress={handleCycleSorting} activeOpacity={0.7}>
               <Text style={[styles.menuText, { color: theme.textPrimary }]}>Default Sorting</Text>
               <Text style={[styles.menuValue, { color: theme.textSecondary }]}>
@@ -204,7 +197,7 @@ export const ProfileScreen: React.FC<{ navigation?: any }> = ({ navigation }) =>
         {/* About Section */}
         <View style={styles.section}>
           <Text style={[styles.sectionHeader, { color: theme.textMuted }]}>ABOUT</Text>
-          <View style={[styles.menuCard, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+          <View style={[styles.menuCard, { backgroundColor: theme.surface, borderColor: theme.border }, shadows.sm]}>
             <View style={styles.menuItemRow}>
               <Text style={[styles.menuText, { color: theme.textPrimary }]}>Version</Text>
               <Text style={[styles.menuValue, { color: theme.textSecondary }]}>DailyLoop 1.0.0</Text>
@@ -221,11 +214,11 @@ export const ProfileScreen: React.FC<{ navigation?: any }> = ({ navigation }) =>
 
         {/* Sign Out Button */}
         <TouchableOpacity
-          style={[styles.logoutBtn, { backgroundColor: theme.priorityHighBg, borderColor: 'rgba(235, 87, 87, 0.3)' }]}
+          style={[styles.logoutBtn, { backgroundColor: theme.priorityHighBg, borderColor: theme.border }, shadows.sm]}
           onPress={confirmLogout}
           activeOpacity={0.85}
         >
-          <Text style={[styles.logoutBtnText, { color: theme.priorityHighText }]}>Sign Out</Text>
+          <Text style={[styles.logoutBtnText, { color: theme.priorityHigh }]}>Sign Out</Text>
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
@@ -243,18 +236,23 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
   },
   backBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingVertical: spacing.xs,
+    gap: 6,
   },
   backText: {
-    ...typography.bodySm,
+    fontFamily: fontFamilies.body,
     fontSize: 14,
+    fontWeight: '500',
   },
   headerTitle: {
-    ...typography.title,
-    fontSize: 16,
+    fontFamily: fontFamilies.headingBold,
+    fontSize: 18,
+    fontWeight: '600',
   },
   headerSpacer: {
-    width: 48,
+    width: 60,
   },
   container: {
     paddingHorizontal: spacing.containerPadding,
@@ -264,8 +262,8 @@ const styles = StyleSheet.create({
   userCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderRadius: radius.md,
-    padding: spacing.md,
+    borderRadius: radius.xl, // 32px curved radius
+    padding: spacing.lg,
     borderWidth: 1,
     marginBottom: spacing.lg,
   },
@@ -278,31 +276,35 @@ const styles = StyleSheet.create({
     marginRight: spacing.md,
   },
   avatarText: {
-    fontSize: 20,
-    fontWeight: '800',
+    fontFamily: fontFamilies.body,
+    fontSize: 18,
+    fontWeight: '700',
   },
   userInfo: {
     flex: 1,
   },
   userName: {
-    ...typography.title,
-    fontSize: 17,
+    fontFamily: fontFamilies.headingBold,
+    fontSize: 18,
+    fontWeight: '600',
   },
   userEmail: {
-    ...typography.bodySm,
+    fontFamily: fontFamilies.body,
+    fontSize: 13,
     marginTop: 2,
   },
   section: {
     marginBottom: spacing.lg,
   },
   sectionHeader: {
-    ...typography.caption,
+    fontFamily: fontFamilies.body,
     fontSize: 11,
-    marginBottom: spacing.sm,
+    marginBottom: spacing.xs,
     letterSpacing: 0.8,
+    fontWeight: '500',
   },
   menuCard: {
-    borderRadius: radius.md,
+    borderRadius: radius.lg, // 24px curved radius
     borderWidth: 1,
   },
   themeOptionRow: {
@@ -312,12 +314,12 @@ const styles = StyleSheet.create({
     padding: spacing.md,
   },
   menuText: {
-    ...typography.body,
-    fontSize: 15,
+    fontFamily: fontFamilies.body,
+    fontSize: 14,
   },
   checkActive: {
-    fontSize: 18,
-    fontWeight: '800',
+    fontSize: 16,
+    fontWeight: '700',
     marginLeft: spacing.sm,
   },
   menuItem: {
@@ -333,24 +335,26 @@ const styles = StyleSheet.create({
     padding: spacing.md,
   },
   menuValue: {
-    ...typography.bodySm,
+    fontFamily: fontFamilies.body,
+    fontSize: 13,
   },
   chevron: {
-    fontSize: 18,
+    fontSize: 16,
   },
   divider: {
     height: 1,
   },
   logoutBtn: {
-    height: 48,
-    borderRadius: radius.md,
+    height: 50,
+    borderRadius: radius.pill,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
     marginTop: spacing.md,
   },
   logoutBtnText: {
-    ...typography.title,
+    fontFamily: fontFamilies.body,
     fontSize: 15,
+    fontWeight: '600',
   },
 });

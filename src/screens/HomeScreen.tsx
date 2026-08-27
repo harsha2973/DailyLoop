@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import {
   StyleSheet,
   Text,
@@ -8,17 +8,21 @@ import {
   ScrollView,
   ActivityIndicator,
   RefreshControl,
+  Animated,
 } from 'react-native';
+import Icon from 'react-native-vector-icons/Feather';
 import { useAuth } from '../context/AuthContext';
 import { useTasks } from '../context/TaskContext';
 import { useTheme } from '../theme/ThemeContext';
-import { radius, spacing, typography, fontFamilies } from '../theme/colors';
+import { radius, spacing, fontFamilies, shadows } from '../theme/colors';
 import { Task } from '../types';
 import { SwipeableTaskRow } from '../components/SwipeableTaskRow';
 import { sortTasks } from '../utils/sortTasks';
+import { FilterBar } from '../components/FilterBar';
 
 interface DayItem {
   dayName: string;
+  monthName: string;
   dayNumber: number;
   dateObj: Date;
   dateString: string;
@@ -26,18 +30,94 @@ interface DayItem {
   hasTasks: boolean;
 }
 
+const AnimatedDateCard: React.FC<{
+  item: DayItem;
+  isSelected: boolean;
+  onSelect: () => void;
+  theme: any;
+}> = ({ item, isSelected, onSelect, theme }) => {
+  const anim = useRef(new Animated.Value(isSelected ? 1 : 0)).current;
+
+  useEffect(() => {
+    Animated.spring(anim, {
+      toValue: isSelected ? 1 : 0,
+      useNativeDriver: false,
+      friction: 7,
+      tension: 90,
+    }).start();
+  }, [isSelected, anim]);
+
+  const animatedHeight = anim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [68, 76],
+  });
+
+  return (
+    <TouchableOpacity
+      onPress={onSelect}
+      activeOpacity={0.85}
+      style={styles.dayCardWrapper}
+    >
+      <Animated.View
+        style={[
+          styles.dayCard,
+          {
+            height: animatedHeight,
+            backgroundColor: isSelected ? theme.primaryButton : theme.surface,
+            borderColor: isSelected ? theme.primaryButton : theme.border,
+          },
+          isSelected ? [styles.dayCardActive, shadows.md] : shadows.sm,
+        ]}
+      >
+        <Text
+          style={[
+            styles.dayCardMonth,
+            { color: isSelected ? theme.primaryButtonText : theme.textMuted },
+          ]}
+        >
+          {item.monthName}
+        </Text>
+        <Text
+          style={[
+            styles.dayCardNum,
+            { color: isSelected ? theme.primaryButtonText : theme.textPrimary },
+            isSelected && styles.dayCardNumActive,
+          ]}
+        >
+          {item.dayNumber}
+        </Text>
+        <Text
+          style={[
+            styles.dayCardName,
+            { color: isSelected ? theme.primaryButtonText : theme.textMuted },
+          ]}
+        >
+          {item.dayName}
+        </Text>
+
+        {item.hasTasks && (
+          <View
+            style={[
+              styles.hasTaskDot,
+              { backgroundColor: isSelected ? theme.primaryButtonText : theme.statusCompleted },
+            ]}
+          />
+        )}
+      </Animated.View>
+    </TouchableOpacity>
+  );
+};
+
 export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const { user } = useAuth();
-  const { tasks, loading, toggleTask, removeTask, loadTasks, sortMode } = useTasks();
+  const { tasks, loading, toggleTask, removeTask, loadTasks, sortMode, filterMode, setFilterMode, setSortMode } = useTasks();
   const { theme } = useTheme();
 
-  const [selectedSegment, setSelectedSegment] = useState<'todo' | 'completed' | 'pending'>('todo');
   const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
-  const [groupBy, setGroupBy] = useState<'category' | 'timeOfDay'>('category');
+  const [groupBy, setGroupBy] = useState<'category' | 'timeOfDay'>('timeOfDay');
   const [collapsedGroups, setCollapsedGroups] = useState<{ [key: string]: boolean }>({});
   const [refreshing, setRefreshing] = useState(false);
 
-  // Refresh tasks on mount
   useEffect(() => {
     loadTasks();
   }, [loadTasks]);
@@ -52,7 +132,6 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
     setCollapsedGroups((prev) => ({ ...prev, [groupName]: !prev[groupName] }));
   };
 
-  // Helper to format date relatively (Today, Tomorrow, Yesterday, Aug 27)
   const getRelativeDateLabel = (dateISO: string): string => {
     const taskDate = new Date(dateISO);
     const now = new Date();
@@ -70,7 +149,6 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
     return taskDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   };
 
-  // Compact 5-day week selector strip
   const daysStrip = useMemo<DayItem[]>(() => {
     const list: DayItem[] = [];
     const today = new Date();
@@ -91,6 +169,7 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
 
       list.push({
         dayName: dayNames[d.getDay()],
+        monthName: d.toLocaleDateString('en-US', { month: 'short' }),
         dayNumber: d.getDate(),
         dateObj: d,
         dateString: dateStr,
@@ -101,34 +180,25 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
     return list;
   }, [tasks]);
 
-  // Filter tasks based on selected date & segment
   const filteredTasks = useMemo(() => {
     return tasks.filter((task) => {
-      // Date filter
       if (selectedDate) {
         const taskDate = new Date(task.dateTime);
         const isSameDate = taskDate.toDateString() === selectedDate.toDateString();
         if (!isSameDate) return false;
       }
 
-      // Segment filter
-      if (selectedSegment === 'completed') return task.completed;
-      if (selectedSegment === 'todo') return !task.completed;
-      if (selectedSegment === 'pending') {
-        const isPastDeadline = new Date(task.deadline).getTime() < Date.now();
-        return !task.completed && isPastDeadline;
-      }
+      if (filterMode === 'completed') return task.completed;
+      if (filterMode === 'active') return !task.completed;
       return true;
     });
-  }, [tasks, selectedDate, selectedSegment]);
+  }, [tasks, selectedDate, filterMode]);
 
-  // Calculate Time of Day based on task's scheduled time and explicit preference
   const getTimeOfDayLabel = (task: Task): string => {
     if (
       task.timeOfDay &&
       task.timeOfDay.trim() &&
-      task.timeOfDay !== 'General' &&
-      task.timeOfDay !== 'Morning'
+      task.timeOfDay !== 'General'
     ) {
       return task.timeOfDay;
     }
@@ -136,13 +206,12 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
     const taskDate = new Date(task.dateTime);
     const hour = taskDate.getHours();
 
-    if (hour >= 12 && hour < 17) return 'Afternoon';
-    if (hour >= 17 && hour < 21) return 'Evening';
+    if (hour >= 12 && hour < 17) return 'Workload';
+    if (hour >= 17 && hour < 21) return 'Workload';
     if (hour >= 21 || hour < 5) return 'Night';
     return 'Morning';
   };
 
-  // Dynamic Grouping by Category or Time of Day
   const groupedTasks = useMemo(() => {
     const groups: { [key: string]: Task[] } = {};
 
@@ -174,32 +243,57 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const totalTodayCount = todayTasks.length;
   const progressPercent = totalTodayCount > 0 ? Math.round((completedTodayCount / totalTodayCount) * 100) : 0;
 
+  const renderGroupIconName = (groupTitle: string): string => {
+    const title = groupTitle.toLowerCase();
+    if (title.includes('morning')) return 'clock';
+    if (title.includes('workload')) return 'sun';
+    if (title.includes('night') || title.includes('evening')) return 'moon';
+    if (title.includes('work')) return 'briefcase';
+    if (title.includes('personal')) return 'user';
+    if (title.includes('health')) return 'activity';
+    if (title.includes('study')) return 'book-open';
+    return 'folder';
+  };
+
   const renderTaskGroup = (title: string, taskList: Task[]) => {
     if (!taskList || taskList.length === 0) return null;
     const isCollapsed = collapsedGroups[title];
     const sortedTasks = sortTasks(taskList, sortMode);
 
     return (
-      <View key={title} style={[styles.groupCard, { backgroundColor: theme.glassSurface, borderColor: theme.glassBorder }]}>
+      <View key={title} style={styles.groupSection}>
         <TouchableOpacity
           style={styles.groupHeaderRow}
           onPress={() => toggleGroupCollapse(title)}
           activeOpacity={0.7}
         >
-          <Text style={[styles.groupTitleText, { color: theme.textPrimary }]}>
-            {title} · {sortedTasks.length}
-          </Text>
-          <Text style={[styles.groupChevron, { color: theme.textMuted }]}>{isCollapsed ? '►' : '▼'}</Text>
+          <View style={styles.groupTitleContainer}>
+            <Icon
+              name={renderGroupIconName(title)}
+              size={15}
+              color={theme.textPrimary}
+              style={styles.groupHeaderIcon}
+            />
+            <Text style={[styles.groupTitleText, { color: theme.textPrimary }]}>
+              {title} · {sortedTasks.length}
+            </Text>
+          </View>
+          <Icon
+            name={isCollapsed ? 'chevron-right' : 'chevron-down'}
+            size={16}
+            color={theme.textMuted}
+          />
         </TouchableOpacity>
 
-        {!isCollapsed &&
-          sortedTasks.map((item, idx) => {
-            const dateLabel = getRelativeDateLabel(item.dateTime);
-            const timeLabel = new Date(item.dateTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        {!isCollapsed && (
+          <View style={styles.taskListContainer}>
+            {sortedTasks.map((item) => {
+              const dateLabel = getRelativeDateLabel(item.dateTime);
+              const timeLabel = new Date(item.dateTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-            return (
-              <View key={item._id} style={[idx > 0 && { borderTopWidth: 1, borderTopColor: theme.divider }]}>
+              return (
                 <SwipeableTaskRow
+                  key={item._id}
                   task={item}
                   theme={theme}
                   onToggle={toggleTask}
@@ -208,46 +302,12 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                   dateLabel={dateLabel}
                   timeLabel={timeLabel}
                 />
-              </View>
-            );
-          })}
+              );
+            })}
+          </View>
+        )}
       </View>
     );
-  };
-
-  const formattedDate = (selectedDate || new Date()).toLocaleDateString('en-US', {
-    weekday: 'long',
-    month: 'short',
-    day: 'numeric',
-  });
-
-  // Date selector pill styling based on theme
-  const getWeekPillStyle = (isSelected: boolean) => {
-    if (isSelected) {
-      return { backgroundColor: theme.primary, borderColor: theme.primary };
-    }
-    if (theme.name === 'light') {
-      return { backgroundColor: '#FFFFFF', borderColor: '#E9E9E7' };
-    }
-    return { backgroundColor: theme.surface, borderColor: theme.border };
-  };
-
-  const getWeekTextStyle = (isSelected: boolean) => {
-    if (isSelected) {
-      return { color: theme.onPrimary };
-    }
-    return { color: theme.textSecondary };
-  };
-
-  // Group-By pill styling based on theme
-  const getGroupByPillStyle = (isActive: boolean) => {
-    if (isActive) {
-      return { backgroundColor: theme.primary, borderColor: theme.primary };
-    }
-    if (theme.name === 'light') {
-      return { backgroundColor: '#F1F1EF', borderColor: '#E9E9E7' };
-    }
-    return { backgroundColor: theme.surface, borderColor: theme.border };
   };
 
   return (
@@ -256,68 +316,55 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
         contentContainerStyle={styles.container}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.textPrimary} />}
       >
-        {/* Header with Top Right Profile Avatar */}
+        {/* Top Header with User Greeting & Profile Avatar Button */}
         <View style={styles.header}>
           <View style={styles.userSection}>
-            <Text style={[styles.greetingTitle, { color: theme.textPrimary }]}>Hey, {user?.name ? user.name.split(' ')[0] : 'Harsha'} 👋</Text>
-            <Text style={[styles.greetingSub, { color: theme.textSecondary }]}>Let's make progress today.</Text>
+            <Text style={[styles.greetingTitle, { color: theme.textPrimary }]}>
+              Hey, {user?.name ? user.name.split(' ')[0] : 'Harsha'} 👋
+            </Text>
+            <Text style={[styles.greetingSub, { color: theme.textSecondary }]}>
+              Let's make progress today!
+            </Text>
           </View>
 
-          {/* Top Right Profile Avatar Button (UNTOUCHED) */}
+          {/* Profile Avatar Button (Navigates to Profile Screen) */}
           <TouchableOpacity
-            style={[styles.profileAvatarBtn, { backgroundColor: theme.primary, borderColor: theme.border }]}
+            style={[styles.profileAvatarBtn, { backgroundColor: theme.primaryButton }, shadows.sm]}
             onPress={() => navigation.navigate('Profile')}
             activeOpacity={0.8}
           >
-            <Text style={[styles.profileAvatarText, { color: theme.onPrimary }]}>
+            <Text style={[styles.profileAvatarText, { color: theme.primaryButtonText }]}>
               {user?.name ? user.name.charAt(0).toUpperCase() : 'H'}
             </Text>
           </TouchableOpacity>
         </View>
 
-        {/* Compact Horizontal Week Selector */}
-        <View style={styles.weekSelectorSection}>
-          <Text style={[styles.dateHeaderLabel, { color: theme.textMuted }]}>{formattedDate}</Text>
+        {/* 1. Animated 7-Day Date Selector Cards */}
+        <View style={styles.dateSelectorContainer}>
+          {daysStrip.map((item) => {
+            const isSelected =
+              selectedDate !== null &&
+              item.dateObj.toDateString() === selectedDate.toDateString();
 
-          <View style={styles.weekStrip}>
-            <TouchableOpacity
-              style={[styles.weekPill, getWeekPillStyle(selectedDate === null)]}
-              onPress={() => setSelectedDate(null)}
-              activeOpacity={0.8}
-            >
-              <Text style={[styles.weekDayName, getWeekTextStyle(selectedDate === null)]}>
-                ALL
-              </Text>
-            </TouchableOpacity>
-
-            {daysStrip.map((item) => {
-              const isSelected =
-                selectedDate !== null &&
-                item.dateObj.toDateString() === selectedDate.toDateString();
-
-              return (
-                <TouchableOpacity
-                  key={item.dayName + item.dayNumber}
-                  style={[styles.weekPill, getWeekPillStyle(isSelected)]}
-                  onPress={() => setSelectedDate(item.dateObj)}
-                  activeOpacity={0.8}
-                >
-                  <Text style={[styles.weekDayName, getWeekTextStyle(isSelected)]}>
-                    {item.dayName}
-                  </Text>
-                  <Text style={[styles.weekDayNumber, getWeekTextStyle(isSelected)]}>
-                    {item.dayNumber}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
+            return (
+              <AnimatedDateCard
+                key={item.dateString}
+                item={item}
+                isSelected={isSelected}
+                onSelect={() => setSelectedDate(item.dateObj)}
+                theme={theme}
+              />
+            );
+          })}
         </View>
 
-        {/* Today's Progress Card */}
-        <View style={[styles.progressCard, { backgroundColor: theme.glassSurface, borderColor: theme.glassBorder }]}>
+        {/* 2. Today's Progress Card */}
+        <View style={[styles.progressCard, { backgroundColor: theme.surface, borderColor: theme.border }, shadows.md]}>
           <View style={styles.progressTopRow}>
-            <Text style={[styles.progressTitle, { color: theme.textPrimary }]}>Today's Progress</Text>
+            <View style={styles.progressHeaderTitleRow}>
+              <Icon name="trending-up" size={16} color={theme.textPrimary} style={styles.progressHeaderIcon} />
+              <Text style={[styles.progressTitle, { color: theme.textPrimary }]}>Today's Progress</Text>
+            </View>
             <Text style={[styles.progressPercentage, { color: theme.textPrimary }]}>{progressPercent}%</Text>
           </View>
           <Text style={[styles.progressSub, { color: theme.textSecondary }]}>
@@ -325,86 +372,87 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
           </Text>
 
           {/* Progress Bar */}
-          <View style={[styles.progressBarTrack, { backgroundColor: theme.backgroundSecondary }]}>
+          <View style={[styles.progressBarTrack, { backgroundColor: theme.surfaceSecondary }]}>
             <View style={[styles.progressBarFill, { width: `${progressPercent}%`, backgroundColor: theme.statusCompleted }]} />
           </View>
         </View>
 
-        {/* Task Status Segmented Control */}
-        <View style={[styles.segmentedContainer, { backgroundColor: theme.backgroundSecondary, borderColor: theme.border }]}>
-          <TouchableOpacity
-            style={[styles.segmentBtn, selectedSegment === 'todo' && { backgroundColor: theme.primary }]}
-            onPress={() => setSelectedSegment('todo')}
-          >
-            <Text style={[styles.segmentText, { color: theme.textSecondary }, selectedSegment === 'todo' && { color: theme.onPrimary, fontWeight: '700' }]}>
-              To Do
-            </Text>
-          </TouchableOpacity>
+        {/* 3. Large Curved Task Groups Container Card */}
+        <View style={[styles.mainContentCard, { backgroundColor: theme.surface, borderColor: theme.border }, shadows.md]}>
+          {/* Segmented Filter Bar */}
+          <FilterBar
+            filterMode={filterMode}
+            sortMode={sortMode}
+            onFilterChange={setFilterMode}
+            onSortChange={setSortMode}
+          />
 
-          <TouchableOpacity
-            style={[styles.segmentBtn, selectedSegment === 'completed' && { backgroundColor: theme.primary }]}
-            onPress={() => setSelectedSegment('completed')}
-          >
-            <Text style={[styles.segmentText, { color: theme.textSecondary }, selectedSegment === 'completed' && { color: theme.onPrimary, fontWeight: '700' }]}>
-              Completed
-            </Text>
-          </TouchableOpacity>
+          {/* Group By Selector Bar */}
+          <View style={styles.groupByRow}>
+            <Text style={[styles.groupByLabel, { color: theme.textMuted }]}>GROUP BY:</Text>
+            <View style={styles.groupByStrip}>
+              <TouchableOpacity
+                style={[
+                  styles.groupByPill,
+                  { backgroundColor: theme.surfaceSecondary, borderColor: theme.border },
+                  groupBy === 'category' && { backgroundColor: theme.primaryButton, borderColor: theme.primaryButton },
+                ]}
+                onPress={() => setGroupBy('category')}
+                activeOpacity={0.8}
+              >
+                <Text
+                  style={[
+                    styles.groupByText,
+                    { color: theme.textSecondary },
+                    groupBy === 'category' && { color: theme.primaryButtonText, fontWeight: '700' },
+                  ]}
+                >
+                  Category
+                </Text>
+              </TouchableOpacity>
 
-          <TouchableOpacity
-            style={[styles.segmentBtn, selectedSegment === 'pending' && { backgroundColor: theme.primary }]}
-            onPress={() => setSelectedSegment('pending')}
-          >
-            <Text style={[styles.segmentText, { color: theme.textSecondary }, selectedSegment === 'pending' && { color: theme.onPrimary, fontWeight: '700' }]}>
-              Pending
-            </Text>
-          </TouchableOpacity>
-        </View>
+              <TouchableOpacity
+                style={[
+                  styles.groupByPill,
+                  { backgroundColor: theme.surfaceSecondary, borderColor: theme.border },
+                  groupBy === 'timeOfDay' && { backgroundColor: theme.primaryButton, borderColor: theme.primaryButton },
+                ]}
+                onPress={() => setGroupBy('timeOfDay')}
+                activeOpacity={0.8}
+              >
+                <Text
+                  style={[
+                    styles.groupByText,
+                    { color: theme.textSecondary },
+                    groupBy === 'timeOfDay' && { color: theme.primaryButtonText, fontWeight: '700' },
+                  ]}
+                >
+                  Time of Day
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
 
-        {/* Group By Selector Bar */}
-        <View style={styles.groupByRow}>
-          <Text style={[styles.groupByLabel, { color: theme.textMuted }]}>GROUP BY:</Text>
-          <View style={styles.groupByStrip}>
-            <TouchableOpacity
-              style={[styles.groupByPill, getGroupByPillStyle(groupBy === 'category')]}
-              onPress={() => setGroupBy('category')}
-              activeOpacity={0.8}
-            >
-              <Text style={[styles.groupByText, { color: theme.textSecondary }, groupBy === 'category' && { color: theme.onPrimary }]}>
-                Category
+          {/* Task Groups */}
+          {loading && !refreshing ? (
+            <ActivityIndicator size="small" color={theme.textPrimary} style={styles.loader} />
+          ) : filteredTasks.length === 0 ? (
+            <View style={styles.emptyState}>
+              <Text style={[styles.emptyTitle, { color: theme.textPrimary }]}>No tasks found</Text>
+              <Text style={[styles.emptySub, { color: theme.textSecondary }]}>
+                {selectedDate
+                  ? "No tasks for this date. Tap '+ New' to create one."
+                  : "Your task list is clear. Tap '+ New' to add a task."}
               </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.groupByPill, getGroupByPillStyle(groupBy === 'timeOfDay')]}
-              onPress={() => setGroupBy('timeOfDay')}
-              activeOpacity={0.8}
-            >
-              <Text style={[styles.groupByText, { color: theme.textSecondary }, groupBy === 'timeOfDay' && { color: theme.onPrimary }]}>
-                Time of Day
-              </Text>
-            </TouchableOpacity>
-          </View>
+            </View>
+          ) : (
+            <View style={styles.groupsContainer}>
+              {Object.keys(groupedTasks).map((groupName) =>
+                renderTaskGroup(groupName, groupedTasks[groupName])
+              )}
+            </View>
+          )}
         </View>
-
-        {/* Task Groups */}
-        {loading && !refreshing ? (
-          <ActivityIndicator size="small" color={theme.textPrimary} style={styles.loader} />
-        ) : filteredTasks.length === 0 ? (
-          <View style={[styles.emptyState, { backgroundColor: theme.glassSurface, borderColor: theme.glassBorder }]}>
-            <Text style={[styles.emptyTitle, { color: theme.textPrimary }]}>No tasks found</Text>
-            <Text style={[styles.emptySub, { color: theme.textSecondary }]}>
-              {selectedDate
-                ? "No tasks for this day. Tap 'ALL' above or '+ New' to add a task."
-                : "Your task list is clear. Tap '+ New' to add your next task."}
-            </Text>
-          </View>
-        ) : (
-          <View style={styles.groupsSection}>
-            {Object.keys(groupedTasks).map((groupName) =>
-              renderTaskGroup(groupName, groupedTasks[groupName])
-            )}
-          </View>
-        )}
       </ScrollView>
     </SafeAreaView>
   );
@@ -413,104 +461,131 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
 const styles = StyleSheet.create({
   flex: { flex: 1 },
   container: {
-    paddingHorizontal: spacing.containerPadding, // 24dp
-    paddingTop: spacing.md, // Compact 14dp top padding
-    paddingBottom: 105,
+    paddingHorizontal: spacing.containerPadding,
+    paddingTop: spacing.md,
+    paddingBottom: 110,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: spacing.md, // Compact margin
+    marginBottom: spacing.sm,
   },
   userSection: {
     flex: 1,
   },
   greetingTitle: {
-    fontFamily: fontFamilies.heading,
-    fontSize: 25,
+    fontFamily: fontFamilies.headingBold,
+    fontSize: 24,
     fontWeight: '700',
   },
   greetingSub: {
-    fontFamily: fontFamilies.body,
+    fontFamily: fontFamilies.headingRegular,
     fontSize: 14,
     marginTop: 2,
+    fontStyle: 'italic',
   },
   profileAvatarBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 42,
+    height: 42,
+    borderRadius: 21,
     justifyContent: 'center',
     alignItems: 'center',
     marginLeft: spacing.md,
-    borderWidth: 1,
   },
   profileAvatarText: {
-    fontSize: 17,
-    fontWeight: '800',
-  },
-  weekSelectorSection: {
-    marginBottom: spacing.md, // Compact spacing
-  },
-  dateHeaderLabel: {
     fontFamily: fontFamilies.body,
-    fontSize: 11,
-    marginBottom: 6,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    fontSize: 17,
+    fontWeight: '700',
   },
-  weekStrip: {
+  dateSelectorContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    gap: 5,
+    alignItems: 'flex-end',
+    height: 82,
+    paddingVertical: spacing.xs,
+    marginBottom: spacing.md,
+    gap: 4,
   },
-  weekPill: {
+  dayCardWrapper: {
     flex: 1,
-    paddingVertical: 7,
-    borderRadius: radius.sm,
-    borderWidth: 1,
     alignItems: 'center',
   },
-  weekDayName: {
-    fontFamily: fontFamilies.body,
-    fontSize: 11,
-    fontWeight: '600',
+  dayCard: {
+    width: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 5,
+    borderRadius: radius.md,
+    borderWidth: 1,
   },
-  weekDayNumber: {
+  dayCardActive: {
+    borderRadius: radius.lg,
+    zIndex: 10,
+  },
+  dayCardMonth: {
     fontFamily: fontFamilies.body,
-    fontSize: 13,
+    fontSize: 10,
+    fontWeight: '500',
+    marginBottom: 1,
+  },
+  dayCardNum: {
+    fontFamily: fontFamilies.headingBold,
+    fontSize: 15,
     fontWeight: '700',
+  },
+  dayCardNumActive: {
+    fontSize: 16.5,
+    fontWeight: '800',
+  },
+  dayCardName: {
+    fontFamily: fontFamilies.body,
+    fontSize: 10,
+    fontWeight: '500',
     marginTop: 1,
   },
+  hasTaskDot: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    marginTop: 2,
+  },
   progressCard: {
-    borderRadius: radius.md,
-    padding: spacing.md,
+    borderRadius: radius.xl,
+    padding: spacing.lg,
     borderWidth: 1,
-    marginBottom: spacing.md, // Compact spacing
+    marginBottom: spacing.lg,
   },
   progressTopRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
+  progressHeaderTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  progressHeaderIcon: {
+    marginRight: 6,
+  },
   progressTitle: {
-    fontFamily: fontFamilies.heading,
-    fontSize: 15,
+    fontFamily: fontFamilies.headingBold,
+    fontSize: 16,
     fontWeight: '600',
   },
   progressPercentage: {
-    fontFamily: fontFamilies.heading,
-    fontSize: 15,
+    fontFamily: fontFamilies.headingBold,
+    fontSize: 16,
     fontWeight: '700',
   },
   progressSub: {
     fontFamily: fontFamilies.body,
     fontSize: 12,
     marginTop: 2,
-    marginBottom: 8,
+    marginBottom: spacing.sm,
   },
   progressBarTrack: {
-    height: 4, // Thinner progress bar
+    height: 6,
     borderRadius: radius.pill,
     overflow: 'hidden',
   },
@@ -518,23 +593,10 @@ const styles = StyleSheet.create({
     height: '100%',
     borderRadius: radius.pill,
   },
-  segmentedContainer: {
-    flexDirection: 'row',
-    borderRadius: radius.sm,
+  mainContentCard: {
+    borderRadius: radius.xl,
+    padding: spacing.lg,
     borderWidth: 1,
-    marginBottom: spacing.sm + 2,
-    padding: 3,
-  },
-  segmentBtn: {
-    flex: 1,
-    paddingVertical: 7,
-    borderRadius: radius.xs,
-    alignItems: 'center',
-  },
-  segmentText: {
-    fontFamily: fontFamilies.body,
-    fontSize: 12,
-    fontWeight: '600',
   },
   groupByRow: {
     flexDirection: 'row',
@@ -547,58 +609,61 @@ const styles = StyleSheet.create({
     fontFamily: fontFamilies.body,
     fontSize: 11,
     letterSpacing: 0.6,
+    fontWeight: '600',
   },
   groupByStrip: {
     flexDirection: 'row',
     gap: spacing.xs,
   },
   groupByPill: {
-    paddingHorizontal: 10,
-    paddingVertical: 3,
-    borderRadius: radius.xs,
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    borderRadius: radius.pill,
     borderWidth: 1,
   },
   groupByText: {
     fontFamily: fontFamilies.body,
     fontSize: 11,
-    fontWeight: '600',
+    fontWeight: '500',
   },
-  groupsSection: {
-    gap: spacing.md, // Compact group spacing
+  groupsContainer: {
+    gap: spacing.lg,
   },
-  groupCard: {
-    borderRadius: radius.md,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm + 2,
-    borderWidth: 1,
+  groupSection: {
+    marginBottom: spacing.xs,
   },
   groupHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: 4,
-    marginBottom: 2,
+    paddingVertical: spacing.xs,
+    marginBottom: spacing.xs,
+  },
+  groupTitleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  groupHeaderIcon: {
+    marginRight: 6,
   },
   groupTitleText: {
-    fontFamily: fontFamilies.heading,
-    fontSize: 14,
+    fontFamily: fontFamilies.headingBold,
+    fontSize: 16,
     fontWeight: '600',
   },
-  groupChevron: {
-    fontSize: 11,
+  taskListContainer: {
+    gap: 4,
   },
   loader: {
-    marginTop: spacing.lg,
+    paddingVertical: spacing.xl,
   },
   emptyState: {
-    borderRadius: radius.md,
-    padding: spacing.lg,
-    borderWidth: 1,
+    paddingVertical: spacing.xl,
     alignItems: 'center',
   },
   emptyTitle: {
-    fontFamily: fontFamilies.heading,
-    fontSize: 15,
+    fontFamily: fontFamilies.headingBold,
+    fontSize: 16,
     marginBottom: spacing.xs,
   },
   emptySub: {

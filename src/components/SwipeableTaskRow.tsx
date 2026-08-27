@@ -8,8 +8,9 @@ import {
   PanResponder,
   Alert,
 } from 'react-native';
+import Icon from 'react-native-vector-icons/Feather';
 import { Task, Priority } from '../types';
-import { radius, spacing, typography, fontFamilies } from '../theme/colors';
+import { radius, spacing, fontFamilies, shadows } from '../theme/colors';
 import { ThemePalette } from '../theme/colors';
 
 interface Props {
@@ -22,12 +23,63 @@ interface Props {
   timeLabel: string;
 }
 
-// Sentence Case helper: "Finish PROJECT" -> "Finish project", "prepare presentation" -> "Prepare presentation"
 export const toSentenceCase = (text: string): string => {
   if (!text || !text.trim()) return '';
   const trimmed = text.trim();
   const lower = trimmed.toLowerCase();
   return lower.charAt(0).toUpperCase() + lower.slice(1);
+};
+
+interface CategoryStyle {
+  bg: string;
+  graphicColor: string;
+  textColor: string;
+  subtextColor: string;
+  badgeBg: string;
+  shapeType: 'trapezoid' | 'flower' | 'arc' | 'polygon' | 'badge';
+}
+
+const CATEGORY_STYLES: Record<string, CategoryStyle> = {
+  Work: {
+    bg: '#FFB8B3', // Pastel Coral
+    graphicColor: '#FF6B6B',
+    textColor: '#2D1210',
+    subtextColor: '#5E2B27',
+    badgeBg: 'rgba(255, 255, 255, 0.75)',
+    shapeType: 'flower',
+  },
+  Personal: {
+    bg: '#8EE0CA', // Pastel Mint
+    graphicColor: '#36B395',
+    textColor: '#0A2D23',
+    subtextColor: '#154A3B',
+    badgeBg: 'rgba(255, 255, 255, 0.75)',
+    shapeType: 'arc',
+  },
+  Health: {
+    bg: '#FFF099', // Pastel Yellow
+    graphicColor: '#F5C724',
+    textColor: '#2B2508',
+    subtextColor: '#544910',
+    badgeBg: 'rgba(255, 255, 255, 0.75)',
+    shapeType: 'polygon',
+  },
+  Study: {
+    bg: '#2F3842', // Dark Charcoal Slate
+    graphicColor: '#4A72B8',
+    textColor: '#FFFFFF',
+    subtextColor: '#B0C2DE',
+    badgeBg: 'rgba(255, 255, 255, 0.2)',
+    shapeType: 'badge',
+  },
+  General: {
+    bg: '#F5F4EE', // Off-White Ivory
+    graphicColor: '#D8D4C8',
+    textColor: '#1C1A17',
+    subtextColor: '#5C584E',
+    badgeBg: 'rgba(0, 0, 0, 0.06)',
+    shapeType: 'trapezoid',
+  },
 };
 
 export const SwipeableTaskRow: React.FC<Props> = ({
@@ -42,42 +94,12 @@ export const SwipeableTaskRow: React.FC<Props> = ({
   const pan = useRef(new Animated.ValueXY()).current;
   const isSwipedOpen = useRef(false);
 
-  const panResponder = useRef(
-    PanResponder.create({
-      onMoveShouldSetPanResponder: (_, gestureState) => {
-        return Math.abs(gestureState.dx) > 10 && Math.abs(gestureState.dy) < 15;
-      },
-      onPanResponderMove: (_, gestureState) => {
-        if (gestureState.dx < 0) {
-          pan.setValue({ x: Math.max(gestureState.dx, -90), y: 0 });
-        } else if (isSwipedOpen.current && gestureState.dx > 0) {
-          pan.setValue({ x: Math.min(-75 + gestureState.dx, 0), y: 0 });
-        }
-      },
-      onPanResponderRelease: (_, gestureState) => {
-        if (gestureState.dx < -40) {
-          Animated.spring(pan, {
-            toValue: { x: -75, y: 0 },
-            useNativeDriver: false,
-            bounciness: 4,
-          }).start();
-          isSwipedOpen.current = true;
-        } else {
-          Animated.spring(pan, {
-            toValue: { x: 0, y: 0 },
-            useNativeDriver: false,
-            bounciness: 4,
-          }).start();
-          isSwipedOpen.current = false;
-        }
-      },
-    })
-  ).current;
-
   const closeSwipe = () => {
     Animated.spring(pan, {
       toValue: { x: 0, y: 0 },
       useNativeDriver: false,
+      friction: 8,
+      tension: 100,
     }).start();
     isSwipedOpen.current = false;
   };
@@ -100,57 +122,98 @@ export const SwipeableTaskRow: React.FC<Props> = ({
     );
   };
 
-  const getPriorityColor = (priority?: Priority) => {
-    if (priority === 'high') return theme.priorityHigh;
-    if (priority === 'medium') return theme.priorityMedium;
-    return theme.priorityLow;
-  };
+  const panResponder = useRef(
+    PanResponder.create({
+      onMoveShouldSetPanResponder: (_, gestureState) => {
+        return Math.abs(gestureState.dx) > 10 && Math.abs(gestureState.dy) < 15;
+      },
+      onPanResponderMove: (_, gestureState) => {
+        if (gestureState.dx < 0) {
+          pan.setValue({ x: Math.max(gestureState.dx, -90), y: 0 });
+        } else {
+          pan.setValue({ x: Math.min(gestureState.dx, 100), y: 0 });
+        }
+      },
+      onPanResponderRelease: (_, gestureState) => {
+        if (gestureState.dx < -45) {
+          // Swiped Left -> Remain open showing Delete action button
+          Animated.spring(pan, {
+            toValue: { x: -80, y: 0 },
+            useNativeDriver: false,
+            friction: 7,
+            tension: 90,
+          }).start();
+          isSwipedOpen.current = true;
+        } else if (gestureState.dx > 50) {
+          // Swiped Right -> Mark as complete directly without showing icon, then snap back
+          onToggle(task._id);
+          closeSwipe();
+        } else {
+          closeSwipe();
+        }
+      },
+    })
+  ).current;
 
-  const pColor = getPriorityColor(task.priority);
+  const categoryName = task.category && task.category.trim() ? task.category : 'General';
+  const catStyle = CATEGORY_STYLES[categoryName] || CATEGORY_STYLES.General;
   const titleSentenceCase = toSentenceCase(task.title);
-  const hasValidDescription = task.description && task.description.trim().length > 0;
-
-  let priorityLabel = 'Low';
-  if (task.priority === 'high') priorityLabel = 'High';
-  else if (task.priority === 'medium') priorityLabel = 'Medium';
-
-  const deleteBgColor = theme.name === 'light' ? '#E03E3E' : '#EB5757';
-  const deleteTextColor = '#FFFFFF';
 
   return (
     <View style={styles.rowContainer}>
-      {/* Background Revealed Delete Action Button */}
-      <View style={[styles.deleteActionContainer, { backgroundColor: deleteBgColor }]}>
-        <TouchableOpacity
-          style={styles.deleteActionBtn}
-          onPress={handleDeletePress}
-          activeOpacity={0.8}
-        >
-          <Text style={[styles.deleteActionText, { color: deleteTextColor }]}>Delete</Text>
+      {/* Revealed Right Action (Swipe Left -> Delete) */}
+      <View style={[styles.actionContainerRight, { backgroundColor: theme.priorityHigh }]}>
+        <TouchableOpacity style={styles.actionBtn} onPress={handleDeletePress} activeOpacity={0.8}>
+          <Icon name="trash-2" size={20} color="#FFFFFF" />
+          <Text style={[styles.actionText, { color: '#FFFFFF' }]}>Delete</Text>
         </TouchableOpacity>
       </View>
 
-      {/* Foreground Swipeable Task Row */}
+      {/* Foreground Task Card with Category Color & Abstract Geometric Accents */}
       <Animated.View
         style={[
           styles.foregroundCard,
           {
-            backgroundColor: theme.surface,
+            backgroundColor: catStyle.bg,
             transform: pan.getTranslateTransform(),
           },
+          shadows.sm,
         ]}
         {...panResponder.panHandlers}
       >
+        {/* Right Side Abstract Geometric Graphic Accent matching Reference Screenshots */}
+        <View style={styles.graphicClipContainer}>
+          <View
+            style={[
+              styles.geometricShape,
+              { backgroundColor: catStyle.graphicColor },
+              catStyle.shapeType === 'flower' && styles.shapeFlower,
+              catStyle.shapeType === 'arc' && styles.shapeArc,
+              catStyle.shapeType === 'polygon' && styles.shapePolygon,
+              catStyle.shapeType === 'badge' && styles.shapeBadge,
+            ]}
+          />
+        </View>
+
+        {/* Top Right Category Pill Badge */}
+        <View style={[styles.topRightBadge, { backgroundColor: catStyle.badgeBg }]}>
+          <Text style={[styles.topRightBadgeText, { color: catStyle.textColor }]}>
+            {categoryName}
+          </Text>
+        </View>
+
         <TouchableOpacity
           onPress={() => onToggle(task._id)}
           style={[
-            styles.checkbox,
-            { borderColor: pColor },
-            task.completed && { backgroundColor: pColor, borderColor: pColor },
+            styles.checkboxCircle,
+            { borderColor: catStyle.textColor },
+            task.completed && { backgroundColor: catStyle.textColor },
           ]}
           activeOpacity={0.7}
         >
-          {task.completed && <Text style={styles.checkmark}>✓</Text>}
+          {task.completed && (
+            <Icon name="check" size={13} color={catStyle.bg} />
+          )}
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -167,34 +230,18 @@ export const SwipeableTaskRow: React.FC<Props> = ({
           <Text
             style={[
               styles.taskTitle,
-              { color: theme.textPrimary },
-              task.completed && { color: theme.textMuted, textDecorationLine: 'line-through' },
+              { color: catStyle.textColor },
+              task.completed && { opacity: 0.6, textDecorationLine: 'line-through' },
             ]}
           >
             {titleSentenceCase}
           </Text>
 
-          {hasValidDescription ? (
-            <Text style={[styles.taskDesc, { color: theme.textSecondary }]} numberOfLines={2}>
-              {task.description}
-            </Text>
-          ) : null}
-
           <View style={styles.taskMetaRow}>
-            <Text style={[styles.taskMetaText, { color: theme.textMuted }]}>
+            <Icon name="clock" size={12} color={catStyle.subtextColor} style={styles.clockIcon} />
+            <Text style={[styles.taskMetaText, { color: catStyle.subtextColor }]}>
               {dateLabel} · {timeLabel}
             </Text>
-            {task.category && task.category !== 'General' && (
-              <>
-                <Text style={[styles.metaSeparator, { color: theme.textMuted }]}>•</Text>
-                <Text style={[styles.categoryBadge, { color: theme.textSecondary }]}>{task.category}</Text>
-              </>
-            )}
-            <Text style={[styles.metaSeparator, { color: theme.textMuted }]}>•</Text>
-            <View style={styles.priorityRow}>
-              <View style={[styles.dotIndicator, { backgroundColor: pColor }]} />
-              <Text style={[styles.priorityText, { color: pColor }]}>{priorityLabel}</Text>
-            </View>
           </View>
         </TouchableOpacity>
       </Animated.View>
@@ -205,94 +252,115 @@ export const SwipeableTaskRow: React.FC<Props> = ({
 const styles = StyleSheet.create({
   rowContainer: {
     position: 'relative',
-    marginVertical: 2,
+    marginVertical: 6,
   },
-  deleteActionContainer: {
+  actionContainerRight: {
     position: 'absolute',
     right: 0,
     top: 0,
     bottom: 0,
-    width: 75,
-    borderRadius: radius.xs,
+    width: 80,
+    borderRadius: 24,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  deleteActionBtn: {
+  actionBtn: {
     width: '100%',
     height: '100%',
     justifyContent: 'center',
     alignItems: 'center',
+    gap: 2,
   },
-  deleteActionText: {
-    ...typography.caption,
-    fontFamily: fontFamilies.heading,
-    fontSize: 12,
+  actionText: {
+    fontFamily: fontFamilies.body,
+    fontSize: 11,
     fontWeight: '700',
   },
   foregroundCard: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
-    paddingVertical: spacing.sm + 2,
+    alignItems: 'center',
+    paddingVertical: spacing.lg,
+    paddingHorizontal: spacing.lg,
+    borderRadius: 24, // High rounded corners matching reference screenshot
+    minHeight: 88,
+    position: 'relative',
+    overflow: 'hidden',
   },
-  checkbox: {
-    width: 18,
-    height: 18,
-    borderRadius: radius.xs,
+  graphicClipContainer: {
+    position: 'absolute',
+    right: 0,
+    top: 0,
+    bottom: 0,
+    width: 120,
+    overflow: 'hidden',
+  },
+  geometricShape: {
+    position: 'absolute',
+    right: -15,
+    bottom: -15,
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+  },
+  shapeFlower: {
+    borderRadius: 35,
+    transform: [{ rotate: '45deg' }],
+  },
+  shapeArc: {
+    borderRadius: 50,
+    borderTopLeftRadius: 0,
+  },
+  shapePolygon: {
+    borderRadius: 16,
+    transform: [{ rotate: '25deg' }],
+  },
+  shapeBadge: {
+    borderRadius: 20,
+    opacity: 0.8,
+  },
+  topRightBadge: {
+    position: 'absolute',
+    top: 12,
+    right: 14,
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderRadius: radius.pill,
+    zIndex: 10,
+  },
+  topRightBadgeText: {
+    fontFamily: fontFamilies.body,
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  checkboxCircle: {
+    width: 24,
+    height: 24,
+    borderRadius: 12, // Perfect circle matching reference image
     borderWidth: 1.5,
-    marginRight: spacing.md - 2,
-    marginTop: 3,
+    marginRight: spacing.md,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  checkmark: {
-    fontSize: 10,
-    fontWeight: '800',
-    color: '#FFFFFF',
+    zIndex: 10,
   },
   taskBody: {
     flex: 1,
+    paddingRight: 60, // Space for right graphic accent
+    zIndex: 10,
   },
   taskTitle: {
-    fontFamily: fontFamilies.heading,
-    fontSize: 15,
-    fontWeight: '600',
-    lineHeight: 20,
-  },
-  taskDesc: {
-    fontFamily: fontFamilies.body,
-    fontSize: 13,
-    marginTop: 2,
-    lineHeight: 18,
+    fontFamily: fontFamilies.headingBold,
+    fontSize: 16,
+    fontWeight: '700',
+    marginBottom: 4,
   },
   taskMetaRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: spacing.xs + 1,
-    gap: spacing.xs,
   },
-  taskMetaText: {
-    fontFamily: fontFamilies.body,
-    fontSize: 12,
-  },
-  categoryBadge: {
-    fontFamily: fontFamilies.body,
-    fontSize: 11,
-    fontWeight: '500',
-  },
-  metaSeparator: {
-    fontSize: 10,
-  },
-  priorityRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  dotIndicator: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
+  clockIcon: {
     marginRight: 4,
   },
-  priorityText: {
+  taskMetaText: {
     fontFamily: fontFamilies.body,
     fontSize: 12,
     fontWeight: '500',

@@ -14,7 +14,7 @@ import {
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useTasks } from '../context/TaskContext';
 import { useTheme } from '../theme/ThemeContext';
-import { radius, spacing, typography } from '../theme/colors';
+import { radius, spacing, fontFamilies, shadows } from '../theme/colors';
 import { Priority, Task, TimeOfDay } from '../types';
 
 const CATEGORIES = ['Work', 'Personal', 'Health', 'Study', 'General'];
@@ -129,7 +129,7 @@ export const AddEditTaskScreen: React.FC<{ navigation: any; route: any }> = ({
         style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        {/* Navigation Header: Cancel | New Task */}
+        {/* Navigation Header */}
         <View style={[styles.navHeader, { borderBottomColor: theme.border }]}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.cancelBtn}>
             <Text style={[styles.cancelText, { color: theme.textSecondary }]}>Cancel</Text>
@@ -139,171 +139,176 @@ export const AddEditTaskScreen: React.FC<{ navigation: any; route: any }> = ({
         </View>
 
         <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
-          {/* Title Input */}
-          <View style={styles.fieldGroup}>
-            <Text style={[styles.fieldLabel, { color: theme.textMuted }]}>TASK TITLE</Text>
-            <View style={[styles.inputContainer, { backgroundColor: theme.surface, borderColor: theme.border }]}>
-              <TextInput
-                style={[styles.titleInput, { color: theme.textPrimary }]}
-                placeholder="e.g. Finish project proposal"
-                placeholderTextColor={theme.textMuted}
-                value={title}
-                onChangeText={setTitle}
-              />
+          {/* Card 1: Task Details (Title & Description) */}
+          <View style={[styles.sectionCard, { backgroundColor: theme.surface, borderColor: theme.border }, shadows.md]}>
+            <View style={styles.fieldGroup}>
+              <Text style={[styles.fieldLabel, { color: theme.textMuted }]}>TASK TITLE</Text>
+              <View style={[styles.inputContainer, { backgroundColor: theme.surfaceSecondary, borderColor: theme.border }]}>
+                <TextInput
+                  style={[styles.titleInput, { color: theme.textPrimary }]}
+                  placeholder="e.g. Finish project proposal"
+                  placeholderTextColor={theme.textMuted}
+                  value={title}
+                  onChangeText={setTitle}
+                />
+              </View>
+              {!!titleError && <Text style={[styles.fieldError, { color: theme.danger }]}>{titleError}</Text>}
             </View>
-            {!!titleError && <Text style={[styles.fieldError, { color: theme.danger }]}>{titleError}</Text>}
-          </View>
 
-          {/* Description Input */}
-          <View style={styles.fieldGroup}>
-            <Text style={[styles.fieldLabel, { color: theme.textMuted }]}>DESCRIPTION (OPTIONAL)</Text>
-            <View style={[styles.textAreaContainer, { backgroundColor: theme.surface, borderColor: theme.border }]}>
-              <TextInput
-                style={[styles.textAreaInput, { color: theme.textPrimary }]}
-                placeholder="Add notes or subtasks..."
-                placeholderTextColor={theme.textMuted}
-                value={description}
-                onChangeText={setDescription}
-                multiline
-                numberOfLines={3}
-              />
-            </View>
-          </View>
-
-          {/* TIME OF DAY Section */}
-          <View style={styles.fieldGroup}>
-            <Text style={[styles.fieldLabel, { color: theme.textMuted }]}>TIME OF DAY</Text>
-            <View style={styles.chipRow}>
-              {TIME_OF_DAY_OPTIONS.map((item) => {
-                const active = timeOfDay === item.id;
-
-                return (
-                  <TouchableOpacity
-                    key={item.id}
-                    onPress={() => setTimeOfDay(item.id)}
-                    style={[
-                      styles.chipPill,
-                      { backgroundColor: theme.surface, borderColor: theme.border },
-                      active && { backgroundColor: theme.primary, borderColor: theme.primary },
-                    ]}
-                  >
-                    <Text style={[styles.chipPillText, { color: theme.textSecondary }, active && { color: theme.onPrimary }]}>
-                      {item.label}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
+            <View style={styles.fieldGroupLast}>
+              <Text style={[styles.fieldLabel, { color: theme.textMuted }]}>DESCRIPTION (OPTIONAL)</Text>
+              <View style={[styles.textAreaContainer, { backgroundColor: theme.surfaceSecondary, borderColor: theme.border }]}>
+                <TextInput
+                  style={[styles.textAreaInput, { color: theme.textPrimary }]}
+                  placeholder="Add notes or subtasks..."
+                  placeholderTextColor={theme.textMuted}
+                  value={description}
+                  onChangeText={setDescription}
+                  multiline
+                  numberOfLines={3}
+                />
+              </View>
             </View>
           </View>
 
-          {/* CATEGORY Section */}
-          <View style={styles.fieldGroup}>
-            <Text style={[styles.fieldLabel, { color: theme.textMuted }]}>CATEGORY</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categoryScroll}>
-              {CATEGORIES.map((cat) => {
-                const active = category === cat;
+          {/* Card 2: Organization (Time of Day & Category) */}
+          <View style={[styles.sectionCard, { backgroundColor: theme.surface, borderColor: theme.border }, shadows.md]}>
+            <View style={styles.fieldGroup}>
+              <Text style={[styles.fieldLabel, { color: theme.textMuted }]}>TIME OF DAY</Text>
+              <View style={styles.chipRow}>
+                {TIME_OF_DAY_OPTIONS.map((item) => {
+                  const active = timeOfDay === item.id;
 
-                return (
-                  <TouchableOpacity
-                    key={cat}
-                    onPress={() => setCategory(cat)}
-                    style={[
-                      styles.chipPill,
-                      { backgroundColor: theme.surface, borderColor: theme.border },
-                      active && { backgroundColor: theme.primary, borderColor: theme.primary },
-                    ]}
-                  >
-                    <Text style={[styles.chipPillText, { color: theme.textSecondary }, active && { color: theme.onPrimary }]}>
-                      {cat}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </ScrollView>
-          </View>
-
-          {/* PRIORITY Section */}
-          <View style={styles.fieldGroup}>
-            <Text style={[styles.fieldLabel, { color: theme.textMuted }]}>PRIORITY</Text>
-            <View style={styles.priorityRow}>
-              {priorities.map((p) => {
-                const active = priority === p.id;
-
-                return (
-                  <TouchableOpacity
-                    key={p.id}
-                    onPress={() => setPriority(p.id)}
-                    style={[
-                      styles.priorityBtn,
-                      { backgroundColor: active ? p.bg : theme.surface, borderColor: theme.border },
-                      active && { borderColor: p.text },
-                    ]}
-                  >
-                    <Text
+                  return (
+                    <TouchableOpacity
+                      key={item.id}
+                      onPress={() => setTimeOfDay(item.id)}
                       style={[
-                        styles.priorityBtnText,
-                        { color: active ? p.text : theme.textSecondary },
+                        styles.chipPill,
+                        {
+                          backgroundColor: active ? theme.primaryButton : theme.surfaceSecondary,
+                          borderColor: active ? theme.primaryButton : theme.border,
+                        },
                       ]}
                     >
-                      ● {p.label}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
+                      <Text style={[styles.chipPillText, { color: active ? theme.primaryButtonText : theme.textSecondary }]}>
+                        {item.label}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            </View>
+
+            <View style={styles.fieldGroupLast}>
+              <Text style={[styles.fieldLabel, { color: theme.textMuted }]}>CATEGORY</Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categoryScroll}>
+                {CATEGORIES.map((cat) => {
+                  const active = category === cat;
+
+                  return (
+                    <TouchableOpacity
+                      key={cat}
+                      onPress={() => setCategory(cat)}
+                      style={[
+                        styles.chipPill,
+                        {
+                          backgroundColor: active ? theme.primaryButton : theme.surfaceSecondary,
+                          borderColor: active ? theme.primaryButton : theme.border,
+                        },
+                      ]}
+                    >
+                      <Text style={[styles.chipPillText, { color: active ? theme.primaryButtonText : theme.textSecondary }]}>
+                        {cat}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </ScrollView>
             </View>
           </View>
 
-          {/* SCHEDULE AND DEADLINE Section */}
-          <View style={styles.fieldGroup}>
-            <Text style={[styles.fieldLabel, { color: theme.textMuted }]}>SCHEDULE AND DEADLINE</Text>
-            <View style={[styles.timingCard, { backgroundColor: theme.surface, borderColor: theme.border }]}>
-              {/* Scheduled Row */}
-              <View style={styles.timingRow}>
-                <Text style={[styles.timingLabel, { color: theme.textPrimary }]}>Scheduled</Text>
-                <View style={styles.pickerPillsRow}>
-                  <TouchableOpacity
-                    style={[styles.pickerPill, { backgroundColor: theme.backgroundSecondary, borderColor: theme.border }]}
-                    onPress={() => handleOpenPicker('dateTime', 'date')}
-                  >
-                    <Text style={[styles.pickerPillText, { color: theme.textPrimary }]}>
-                      {dateTime.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                    </Text>
-                  </TouchableOpacity>
+          {/* Card 3: Priority */}
+          <View style={[styles.sectionCard, { backgroundColor: theme.surface, borderColor: theme.border }, shadows.md]}>
+            <View style={styles.fieldGroupLast}>
+              <Text style={[styles.fieldLabel, { color: theme.textMuted }]}>PRIORITY</Text>
+              <View style={styles.priorityRow}>
+                {priorities.map((p) => {
+                  const active = priority === p.id;
 
-                  <TouchableOpacity
-                    style={[styles.pickerPill, { backgroundColor: theme.backgroundSecondary, borderColor: theme.border }]}
-                    onPress={() => handleOpenPicker('dateTime', 'time')}
-                  >
-                    <Text style={[styles.pickerPillText, { color: theme.textPrimary }]}>
-                      {dateTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    </Text>
-                  </TouchableOpacity>
-                </View>
+                  return (
+                    <TouchableOpacity
+                      key={p.id}
+                      onPress={() => setPriority(p.id)}
+                      style={[
+                        styles.priorityBtn,
+                        { backgroundColor: active ? p.bg : theme.surfaceSecondary, borderColor: theme.border },
+                        active && { borderColor: p.text },
+                      ]}
+                    >
+                      <Text style={[styles.priorityBtnText, { color: active ? p.text : theme.textSecondary }]}>
+                        ● {p.label}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
               </View>
+            </View>
+          </View>
 
-              <View style={[styles.timingDivider, { backgroundColor: theme.border }]} />
+          {/* Card 4: Schedule & Deadline */}
+          <View style={[styles.sectionCard, { backgroundColor: theme.surface, borderColor: theme.border }, shadows.md]}>
+            <View style={styles.fieldGroupLast}>
+              <Text style={[styles.fieldLabel, { color: theme.textMuted }]}>SCHEDULE AND DEADLINE</Text>
+              <View style={[styles.timingCard, { backgroundColor: theme.surfaceSecondary, borderColor: theme.border }]}>
+                {/* Scheduled Row */}
+                <View style={styles.timingRow}>
+                  <Text style={[styles.timingLabel, { color: theme.textPrimary }]}>Scheduled</Text>
+                  <View style={styles.pickerPillsRow}>
+                    <TouchableOpacity
+                      style={[styles.pickerPill, { backgroundColor: theme.surface, borderColor: theme.border }]}
+                      onPress={() => handleOpenPicker('dateTime', 'date')}
+                    >
+                      <Text style={[styles.pickerPillText, { color: theme.textPrimary }]}>
+                        {dateTime.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                      </Text>
+                    </TouchableOpacity>
 
-              {/* Deadline Row */}
-              <View style={styles.timingRow}>
-                <Text style={[styles.timingLabel, { color: theme.textPrimary }]}>Deadline</Text>
-                <View style={styles.pickerPillsRow}>
-                  <TouchableOpacity
-                    style={[styles.pickerPill, { backgroundColor: theme.backgroundSecondary, borderColor: theme.border }]}
-                    onPress={() => handleOpenPicker('deadline', 'date')}
-                  >
-                    <Text style={[styles.pickerPillText, { color: theme.textPrimary }]}>
-                      {deadline.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                    </Text>
-                  </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[styles.pickerPill, { backgroundColor: theme.surface, borderColor: theme.border }]}
+                      onPress={() => handleOpenPicker('dateTime', 'time')}
+                    >
+                      <Text style={[styles.pickerPillText, { color: theme.textPrimary }]}>
+                        {dateTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
 
-                  <TouchableOpacity
-                    style={[styles.pickerPill, { backgroundColor: theme.backgroundSecondary, borderColor: theme.border }]}
-                    onPress={() => handleOpenPicker('deadline', 'time')}
-                  >
-                    <Text style={[styles.pickerPillText, { color: theme.textPrimary }]}>
-                      {deadline.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    </Text>
-                  </TouchableOpacity>
+                <View style={[styles.timingDivider, { backgroundColor: theme.border }]} />
+
+                {/* Deadline Row */}
+                <View style={styles.timingRow}>
+                  <Text style={[styles.timingLabel, { color: theme.textPrimary }]}>Deadline</Text>
+                  <View style={styles.pickerPillsRow}>
+                    <TouchableOpacity
+                      style={[styles.pickerPill, { backgroundColor: theme.surface, borderColor: theme.border }]}
+                      onPress={() => handleOpenPicker('deadline', 'date')}
+                    >
+                      <Text style={[styles.pickerPillText, { color: theme.textPrimary }]}>
+                        {deadline.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                      </Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      style={[styles.pickerPill, { backgroundColor: theme.surface, borderColor: theme.border }]}
+                      onPress={() => handleOpenPicker('deadline', 'time')}
+                    >
+                      <Text style={[styles.pickerPillText, { color: theme.textPrimary }]}>
+                        {deadline.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
                 </View>
               </View>
             </View>
@@ -319,10 +324,12 @@ export const AddEditTaskScreen: React.FC<{ navigation: any; route: any }> = ({
           )}
 
           {!!submitError && <Text style={[styles.submitError, { color: theme.danger }]}>{submitError}</Text>}
+        </ScrollView>
 
-          {/* Create Task Button */}
+        {/* Floating Bottom Action Button Bar */}
+        <SafeAreaView pointerEvents="box-none" style={styles.floatingButtonContainer}>
           <TouchableOpacity
-            style={[styles.createTaskButton, { backgroundColor: theme.primaryButton }]}
+            style={[styles.createTaskButton, { backgroundColor: theme.primaryButton }, shadows.md]}
             onPress={handleSave}
             disabled={loading}
             activeOpacity={0.85}
@@ -335,7 +342,7 @@ export const AddEditTaskScreen: React.FC<{ navigation: any; route: any }> = ({
               </Text>
             )}
           </TouchableOpacity>
-        </ScrollView>
+        </SafeAreaView>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -347,7 +354,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: spacing.containerPadding, // 24dp
+    paddingHorizontal: spacing.containerPadding,
     paddingVertical: spacing.md,
     borderBottomWidth: 1,
   },
@@ -355,53 +362,65 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.xs,
   },
   cancelText: {
-    ...typography.bodySm,
+    fontFamily: fontFamilies.body,
     fontSize: 14,
   },
   screenTitle: {
-    ...typography.title,
-    fontSize: 16,
+    fontFamily: fontFamilies.headingBold,
+    fontSize: 18,
+    fontWeight: '600',
   },
   headerSpacer: {
     width: 48,
   },
   container: {
-    paddingHorizontal: spacing.containerPadding, // 24dp
+    paddingHorizontal: spacing.containerPadding,
     paddingTop: spacing.lg,
-    paddingBottom: spacing.xl * 2,
+    paddingBottom: 110, // Generous padding so content scrolls behind floating button
+    gap: spacing.lg,
+  },
+  sectionCard: {
+    borderRadius: radius.xl, // 32px curved radius
+    padding: spacing.lg,
+    borderWidth: 1,
   },
   fieldGroup: {
     marginBottom: spacing.lg,
   },
+  fieldGroupLast: {
+    marginBottom: 0,
+  },
   fieldLabel: {
-    ...typography.caption,
+    fontFamily: fontFamilies.body,
     fontSize: 11,
     marginBottom: spacing.xs + 2,
     letterSpacing: 0.5,
+    fontWeight: '500',
   },
   inputContainer: {
-    borderRadius: radius.sm,
+    borderRadius: radius.lg,
     borderWidth: 1,
     paddingHorizontal: spacing.md,
     height: 48,
     justifyContent: 'center',
   },
   titleInput: {
-    ...typography.body,
+    fontFamily: fontFamilies.body,
     fontSize: 15,
   },
   fieldError: {
-    ...typography.caption,
+    fontFamily: fontFamilies.body,
+    fontSize: 12,
     marginTop: spacing.xs,
   },
   textAreaContainer: {
-    borderRadius: radius.sm,
+    borderRadius: radius.lg,
     borderWidth: 1,
     padding: spacing.md,
     minHeight: 90,
   },
   textAreaInput: {
-    ...typography.body,
+    fontFamily: fontFamilies.body,
     fontSize: 14,
     textAlignVertical: 'top',
   },
@@ -412,11 +431,11 @@ const styles = StyleSheet.create({
   chipPill: {
     paddingHorizontal: 14,
     paddingVertical: 8,
-    borderRadius: radius.sm,
+    borderRadius: radius.pill,
     borderWidth: 1,
   },
   chipPillText: {
-    ...typography.caption,
+    fontFamily: fontFamilies.body,
     fontSize: 12,
     fontWeight: '600',
   },
@@ -430,17 +449,17 @@ const styles = StyleSheet.create({
   priorityBtn: {
     flex: 1,
     paddingVertical: 9,
-    borderRadius: radius.sm,
+    borderRadius: radius.pill,
     borderWidth: 1,
     alignItems: 'center',
   },
   priorityBtnText: {
-    ...typography.caption,
+    fontFamily: fontFamilies.body,
     fontSize: 12,
-    fontWeight: '700',
+    fontWeight: '600',
   },
   timingCard: {
-    borderRadius: radius.sm,
+    borderRadius: radius.lg,
     borderWidth: 1,
   },
   timingRow: {
@@ -450,7 +469,7 @@ const styles = StyleSheet.create({
     padding: spacing.md,
   },
   timingLabel: {
-    ...typography.body,
+    fontFamily: fontFamilies.body,
     fontSize: 14,
   },
   pickerPillsRow: {
@@ -460,11 +479,11 @@ const styles = StyleSheet.create({
   pickerPill: {
     paddingHorizontal: 10,
     paddingVertical: 6,
-    borderRadius: radius.xs,
+    borderRadius: radius.pill,
     borderWidth: 1,
   },
   pickerPillText: {
-    ...typography.caption,
+    fontFamily: fontFamilies.body,
     fontSize: 12,
     fontWeight: '500',
   },
@@ -472,18 +491,27 @@ const styles = StyleSheet.create({
     height: 1,
   },
   submitError: {
+    fontFamily: fontFamilies.body,
+    fontSize: 12,
     textAlign: 'center',
-    marginBottom: spacing.md,
+    marginTop: spacing.xs,
+  },
+  floatingButtonContainer: {
+    position: 'absolute',
+    bottom: 20,
+    left: 0,
+    right: 0,
+    paddingHorizontal: spacing.containerPadding,
   },
   createTaskButton: {
-    height: 48,
-    borderRadius: radius.sm,
+    height: 52,
+    borderRadius: radius.pill,
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: spacing.md,
   },
   createTaskButtonText: {
-    ...typography.title,
+    fontFamily: fontFamilies.body,
     fontSize: 15,
+    fontWeight: '600',
   },
 });

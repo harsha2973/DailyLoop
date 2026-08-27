@@ -7,10 +7,11 @@ import {
   ScrollView,
   TouchableOpacity,
 } from 'react-native';
+import Icon from 'react-native-vector-icons/Feather';
 import { useAuth } from '../context/AuthContext';
 import { useTasks } from '../context/TaskContext';
 import { useTheme } from '../theme/ThemeContext';
-import { radius, spacing, typography } from '../theme/colors';
+import { radius, spacing, fontFamilies, shadows } from '../theme/colors';
 
 export const CalendarScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const { user } = useAuth();
@@ -37,7 +38,6 @@ export const CalendarScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
     return theme.priorityLow;
   };
 
-  // Generate 35 calendar matrix cells
   const calendarDays = useMemo(() => {
     const year = currentMonth.getFullYear();
     const month = currentMonth.getMonth();
@@ -74,7 +74,6 @@ export const CalendarScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
     return matrix;
   }, [currentMonth, tasks]);
 
-  // Selected day's tasks
   const selectedDayTasks = useMemo(() => {
     return tasks.filter((t) => {
       const td = new Date(t.dateTime);
@@ -92,6 +91,7 @@ export const CalendarScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
   });
 
   const selectedDateHeader = selectedDate.toLocaleDateString('default', {
+    weekday: 'long',
     month: 'short',
     day: 'numeric',
   });
@@ -103,31 +103,41 @@ export const CalendarScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
         <View style={styles.header}>
           <View style={styles.headerTitleArea}>
             <Text style={[styles.pageTitle, { color: theme.textPrimary }]}>Calendar</Text>
-            <Text style={[styles.pageSub, { color: theme.textSecondary }]}>Schedule and upcoming task deadlines.</Text>
+            <Text style={[styles.pageSub, { color: theme.textSecondary }]}>
+              Schedule and upcoming task deadlines.
+            </Text>
           </View>
 
           <TouchableOpacity
-            style={[styles.profileAvatarBtn, { backgroundColor: theme.primary, borderColor: theme.border }]}
+            style={[styles.profileAvatarBtn, { backgroundColor: theme.surface, borderColor: theme.border }, shadows.sm]}
             onPress={() => navigation.navigate('Profile')}
             activeOpacity={0.8}
           >
-            <Text style={[styles.profileAvatarText, { color: theme.onPrimary }]}>
+            <Text style={[styles.profileAvatarText, { color: theme.textPrimary }]}>
               {user?.name ? user.name.charAt(0).toUpperCase() : 'H'}
             </Text>
           </TouchableOpacity>
         </View>
 
         {/* Calendar Matrix Card */}
-        <View style={[styles.calendarCard, { backgroundColor: theme.glassSurface, borderColor: theme.glassBorder }]}>
+        <View style={[styles.calendarCard, { backgroundColor: theme.surface, borderColor: theme.border }, shadows.md]}>
           {/* Month/Year Header */}
           <View style={styles.monthHeader}>
             <Text style={[styles.monthTitle, { color: theme.textPrimary }]}>{monthYearHeader}</Text>
             <View style={styles.monthNavBtns}>
-              <TouchableOpacity onPress={prevMonth} style={[styles.navBtn, { backgroundColor: theme.backgroundSecondary, borderColor: theme.border }]}>
-                <Text style={[styles.navBtnText, { color: theme.textPrimary }]}>‹</Text>
+              <TouchableOpacity
+                onPress={prevMonth}
+                style={[styles.navBtn, { backgroundColor: theme.surfaceSecondary, borderColor: theme.border }]}
+                activeOpacity={0.7}
+              >
+                <Icon name="chevron-left" size={16} color={theme.textPrimary} />
               </TouchableOpacity>
-              <TouchableOpacity onPress={nextMonth} style={[styles.navBtn, { backgroundColor: theme.backgroundSecondary, borderColor: theme.border }]}>
-                <Text style={[styles.navBtnText, { color: theme.textPrimary }]}>›</Text>
+              <TouchableOpacity
+                onPress={nextMonth}
+                style={[styles.navBtn, { backgroundColor: theme.surfaceSecondary, borderColor: theme.border }]}
+                activeOpacity={0.7}
+              >
+                <Icon name="chevron-right" size={16} color={theme.textPrimary} />
               </TouchableOpacity>
             </View>
           </View>
@@ -152,7 +162,7 @@ export const CalendarScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
                   key={idx}
                   style={[
                     styles.dayCell,
-                    isSelected && { backgroundColor: theme.primary },
+                    isSelected && { backgroundColor: theme.primaryButton },
                     !cell.isCurrentMonth && styles.dayCellOutside,
                   ]}
                   onPress={() => setSelectedDate(cell.dateObj)}
@@ -162,7 +172,7 @@ export const CalendarScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
                     style={[
                       styles.dayCellText,
                       { color: theme.textPrimary },
-                      isSelected && { color: theme.onPrimary, fontWeight: '700' },
+                      isSelected && { color: theme.primaryButtonText, fontWeight: '700' },
                       !cell.isCurrentMonth && { color: theme.textMuted },
                     ]}
                   >
@@ -171,10 +181,12 @@ export const CalendarScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
 
                   {cell.taskCount > 0 && (
                     <View style={styles.dotsRow}>
-                      <View style={[styles.taskDot, { backgroundColor: theme.statusCompleted }, isSelected && { backgroundColor: theme.onPrimary }]} />
-                      {cell.taskCount > 1 && (
-                        <View style={[styles.taskDot, { backgroundColor: theme.statusCompleted }, isSelected && { backgroundColor: theme.onPrimary }]} />
-                      )}
+                      <View
+                        style={[
+                          styles.taskDot,
+                          { backgroundColor: isSelected ? theme.primaryButtonText : theme.statusCompleted },
+                        ]}
+                      />
                     </View>
                   )}
                 </TouchableOpacity>
@@ -184,8 +196,8 @@ export const CalendarScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
         </View>
 
         {/* Tasks Agenda for Selected Day */}
-        <View style={[styles.taskListCard, { backgroundColor: theme.glassSurface, borderColor: theme.glassBorder }]}>
-          <Text style={[styles.selectedDayTitle, { color: theme.textPrimary }]}>Scheduled on {selectedDateHeader}</Text>
+        <View style={[styles.taskListCard, { backgroundColor: theme.surface, borderColor: theme.border }, shadows.md]}>
+          <Text style={[styles.selectedDayTitle, { color: theme.textPrimary }]}>{selectedDateHeader}</Text>
 
           {selectedDayTasks.length === 0 ? (
             <View style={styles.emptyBox}>
@@ -201,26 +213,34 @@ export const CalendarScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
               const pColor = getPriorityColor(t.priority);
 
               return (
-                <View key={t._id} style={[styles.taskItem, { borderTopColor: theme.divider }]}>
+                <View key={t._id} style={[styles.taskItem, { borderTopColor: theme.border }]}>
                   <TouchableOpacity
                     onPress={() => toggleTask(t._id)}
                     style={[
                       styles.checkbox,
-                      { borderColor: pColor },
-                      t.completed && { backgroundColor: pColor, borderColor: pColor },
+                      { borderColor: t.completed ? theme.statusCompleted : theme.borderStrong },
+                      t.completed && { backgroundColor: theme.statusCompleted, borderColor: theme.statusCompleted },
                     ]}
+                    activeOpacity={0.7}
                   >
                     {t.completed && <Text style={styles.checkmark}>✓</Text>}
                   </TouchableOpacity>
 
                   <View style={styles.taskContent}>
-                    <Text style={[styles.taskTitle, { color: theme.textPrimary }, t.completed && { color: theme.textMuted, textDecorationLine: 'line-through' }]}>
+                    <Text
+                      style={[
+                        styles.taskTitle,
+                        { color: theme.textPrimary },
+                        t.completed && { color: theme.textMuted, textDecorationLine: 'line-through' },
+                      ]}
+                    >
                       {t.title}
                     </Text>
                     <Text style={[styles.taskTime, { color: theme.textMuted }]}>
-                      {selectedDateHeader} · {formattedTime}
+                      {formattedTime}
                     </Text>
                   </View>
+                  <View style={[styles.dotIndicator, { backgroundColor: pColor }]} />
                 </View>
               );
             })
@@ -234,8 +254,8 @@ export const CalendarScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
 const styles = StyleSheet.create({
   flex: { flex: 1 },
   container: {
-    paddingHorizontal: spacing.containerPadding, // 24dp
-    paddingTop: spacing.lg,
+    paddingHorizontal: spacing.containerPadding,
+    paddingTop: spacing.md,
     paddingBottom: 110,
   },
   header: {
@@ -248,12 +268,13 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   pageTitle: {
-    ...typography.displayLarge,
+    fontFamily: fontFamilies.headingBold,
     fontSize: 26,
+    fontWeight: '700',
   },
   pageSub: {
-    ...typography.body,
-    fontSize: 14,
+    fontFamily: fontFamilies.body,
+    fontSize: 13,
     marginTop: 2,
   },
   profileAvatarBtn: {
@@ -266,12 +287,13 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   profileAvatarText: {
-    fontSize: 18,
-    fontWeight: '800',
+    fontFamily: fontFamilies.body,
+    fontSize: 16,
+    fontWeight: '700',
   },
   calendarCard: {
-    borderRadius: radius.md,
-    padding: spacing.md,
+    borderRadius: radius.xl, // 32px curved radius
+    padding: spacing.lg,
     borderWidth: 1,
     marginBottom: spacing.lg,
   },
@@ -282,8 +304,9 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
   },
   monthTitle: {
-    ...typography.title,
-    fontSize: 16,
+    fontFamily: fontFamilies.headingBold,
+    fontSize: 18,
+    fontWeight: '600',
   },
   monthNavBtns: {
     flexDirection: 'row',
@@ -292,14 +315,10 @@ const styles = StyleSheet.create({
   navBtn: {
     width: 32,
     height: 32,
-    borderRadius: radius.xs,
+    borderRadius: radius.pill,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
-  },
-  navBtnText: {
-    fontSize: 18,
-    fontWeight: '600',
   },
   weekLabelsRow: {
     flexDirection: 'row',
@@ -309,7 +328,7 @@ const styles = StyleSheet.create({
   weekLabelText: {
     width: 36,
     textAlign: 'center',
-    ...typography.caption,
+    fontFamily: fontFamilies.body,
     fontSize: 11,
     fontWeight: '600',
   },
@@ -321,8 +340,8 @@ const styles = StyleSheet.create({
   },
   dayCell: {
     width: 38,
-    height: 42,
-    borderRadius: radius.xs,
+    height: 40,
+    borderRadius: radius.pill,
     justifyContent: 'center',
     alignItems: 'center',
     marginVertical: 2,
@@ -331,7 +350,7 @@ const styles = StyleSheet.create({
     opacity: 0.25,
   },
   dayCellText: {
-    ...typography.body,
+    fontFamily: fontFamilies.body,
     fontSize: 13,
   },
   dotsRow: {
@@ -340,18 +359,19 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   taskDot: {
-    width: 3,
-    height: 3,
-    borderRadius: 1.5,
+    width: 4,
+    height: 4,
+    borderRadius: 2,
   },
   taskListCard: {
-    borderRadius: radius.md,
-    padding: spacing.md,
+    borderRadius: radius.xl, // 32px curved radius
+    padding: spacing.lg,
     borderWidth: 1,
   },
   selectedDayTitle: {
-    ...typography.title,
-    fontSize: 15,
+    fontFamily: fontFamilies.headingBold,
+    fontSize: 16,
+    fontWeight: '600',
     marginBottom: spacing.md,
   },
   emptyBox: {
@@ -359,39 +379,46 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   emptyText: {
-    ...typography.bodySm,
+    fontFamily: fontFamilies.body,
+    fontSize: 13,
   },
   taskItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: spacing.sm + 2,
+    paddingVertical: spacing.md,
     borderTopWidth: 1,
   },
   checkbox: {
-    width: 18,
-    height: 18,
-    borderRadius: radius.xs,
-    borderWidth: 1.5,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 1.2,
     marginRight: spacing.md,
     justifyContent: 'center',
     alignItems: 'center',
   },
   checkmark: {
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: '800',
-    color: '#FFFFFF',
+    color: '#000000',
   },
   taskContent: {
     flex: 1,
   },
   taskTitle: {
-    ...typography.body,
+    fontFamily: fontFamilies.body,
     fontSize: 14,
     fontWeight: '500',
   },
   taskTime: {
-    ...typography.caption,
+    fontFamily: fontFamilies.body,
     fontSize: 12,
     marginTop: 2,
+  },
+  dotIndicator: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    marginLeft: spacing.xs,
   },
 });

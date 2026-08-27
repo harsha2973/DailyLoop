@@ -29,3 +29,26 @@ export const loginRequest = async (
   });
   return data;
 };
+
+export const changePasswordRequest = async (
+  oldPassword: string,
+  newPassword: string
+): Promise<{ message: string }> => {
+  const { data } = await apiClient.put<{ message: string }>('/auth/change-password', {
+    oldPassword,
+    newPassword,
+  });
+  return data;
+};
+
+export const updateProfileRequest = async (
+  name: string,
+  email: string
+): Promise<{ message: string; user: User }> => {
+  const { data } = await apiClient.put<{ message: string; user: User }>('/auth/profile', {
+    name,
+    email,
+  });
+  return data;
+};
+

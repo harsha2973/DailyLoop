@@ -12,6 +12,8 @@ import { RegisterScreen } from '../screens/RegisterScreen';
 import { MainTabNavigator } from './MainTabNavigator';
 import { AddEditTaskScreen } from '../screens/AddEditTaskScreen';
 import { ProfileScreen } from '../screens/ProfileScreen';
+import { EditProfileScreen } from '../screens/EditProfileScreen';
+import { ChangePasswordScreen } from '../screens/ChangePasswordScreen';
 import { colors } from '../theme/colors';
 
 const AuthStack = createNativeStackNavigator();
@@ -48,6 +50,8 @@ const MainNavigator = () => (
         options={{ presentation: 'modal' }}
       />
       <AppStack.Screen name="Profile" component={ProfileScreen} />
+      <AppStack.Screen name="EditProfile" component={EditProfileScreen} />
+      <AppStack.Screen name="ChangePassword" component={ChangePasswordScreen} />
     </AppStack.Navigator>
   </TaskProvider>
 );

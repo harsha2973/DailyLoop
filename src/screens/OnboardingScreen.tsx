@@ -1,49 +1,69 @@
 import React from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, SafeAreaView, Dimensions } from 'react-native';
-import { colors, radius, spacing, typography } from '../theme/colors';
+import Icon from 'react-native-vector-icons/Feather';
+import { useTheme } from '../theme/ThemeContext';
+import { radius, spacing, fontFamilies, shadows } from '../theme/colors';
 
 const { width } = Dimensions.get('window');
 
 export const OnboardingScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
+  const { theme } = useTheme();
+
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
       {/* Upper Task Preview Section */}
       <View style={styles.visualSection}>
-        <View style={styles.overviewCard}>
-          <Text style={styles.cardHeader}>Today's Overview</Text>
+        <View style={[styles.overviewCard, { backgroundColor: theme.surface, borderColor: theme.border }, shadows.lg]}>
+          <View style={styles.cardHeaderRow}>
+            <Text style={[styles.cardHeader, { color: theme.textPrimary }]}>Today's Overview</Text>
+            <Text style={styles.emojiBadge}>😍</Text>
+          </View>
 
+          <Text style={[styles.sectionLabel, { color: theme.textMuted }]}>To do</Text>
           <View style={styles.taskItem}>
-            <View style={[styles.checkboxOutline, styles.checkboxDone]}>
+            <View style={[styles.checkboxOutline, { backgroundColor: theme.accent, borderColor: theme.accent }]}>
               <Text style={styles.checkmarkText}>✓</Text>
             </View>
-            <Text style={[styles.taskText, styles.taskDoneText]}>Morning workout</Text>
+            <Text style={[styles.taskText, { color: theme.textPrimary }]}>Morning workout</Text>
           </View>
 
+          <Text style={[styles.sectionLabel, { color: theme.textMuted }]}>Completed</Text>
           <View style={styles.taskItem}>
-            <View style={styles.checkboxOutline} />
-            <Text style={styles.taskText}>Review project</Text>
+            <View style={[styles.checkboxOutline, { backgroundColor: theme.statusCompleted, borderColor: theme.statusCompleted }]}>
+              <Text style={styles.checkmarkText}>✓</Text>
+            </View>
+            <Text style={[styles.taskText, { color: theme.textMuted, textDecorationLine: 'line-through' }]}>
+              Drink water
+            </Text>
           </View>
 
+          <Text style={[styles.sectionLabel, { color: theme.textMuted }]}>Pending</Text>
           <View style={styles.taskItem}>
-            <View style={styles.checkboxOutline} />
-            <Text style={styles.taskText}>Plan tomorrow</Text>
+            <View style={[styles.checkboxOutline, { borderColor: theme.borderStrong }]}>
+              <Icon name="clock" size={10} color={theme.textMuted} />
+            </View>
+            <Text style={[styles.taskText, { color: theme.textPrimary }]}>Evening walk</Text>
           </View>
         </View>
       </View>
 
       {/* Bottom Content Card */}
-      <View style={styles.bottomSection}>
-        <Text style={styles.title}>Your day, organized.</Text>
-        <Text style={styles.description}>
-          A simple, focused way to plan tasks, track progress, and stay consistent.
+      <View style={[styles.bottomSection, { backgroundColor: theme.surface, borderColor: theme.border }, shadows.lg]}>
+        <View style={[styles.iconBadge, { backgroundColor: theme.surfaceSecondary }]}>
+          <Icon name="check-circle" size={32} color={theme.textPrimary} />
+        </View>
+
+        <Text style={[styles.title, { color: theme.textPrimary }]}>Welcome to DailyLoop!</Text>
+        <Text style={[styles.description, { color: theme.textSecondary }]}>
+          A simple, joyful way to take control of your time and routines.
         </Text>
 
         <TouchableOpacity
-          style={styles.primaryButton}
+          style={[styles.primaryButton, { backgroundColor: theme.primaryButton }, shadows.sm]}
           onPress={() => navigation.navigate('Register')}
           activeOpacity={0.85}
         >
-          <Text style={styles.primaryButtonText}>Get Started</Text>
+          <Text style={[styles.primaryButtonText, { color: theme.primaryButtonText }]}>Get Started</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -51,7 +71,9 @@ export const OnboardingScreen: React.FC<{ navigation: any }> = ({ navigation }) 
           style={styles.secondaryLink}
           activeOpacity={0.7}
         >
-          <Text style={styles.secondaryLinkText}>Already have an account? Log in</Text>
+          <Text style={[styles.secondaryLinkText, { color: theme.textSecondary }]}>
+            Already a user? <Text style={{ color: theme.textPrimary, fontWeight: '600' }}>Log in</Text>
+          </Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -61,108 +83,116 @@ export const OnboardingScreen: React.FC<{ navigation: any }> = ({ navigation }) 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
   },
   visualSection: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: spacing.containerPadding, // 24dp
-    backgroundColor: colors.background,
+    paddingHorizontal: spacing.containerPadding,
   },
   overviewCard: {
-    width: width - 48,
-    backgroundColor: colors.surface,
-    borderRadius: radius.md,
+    width: width - 56,
+    borderRadius: radius.xl, // 32px curved radius
     padding: spacing.lg,
     borderWidth: 1,
-    borderColor: colors.border,
+  },
+  cardHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: spacing.md,
   },
   cardHeader: {
-    ...typography.title,
-    fontSize: 16,
-    color: colors.textPrimary,
-    marginBottom: spacing.md,
+    fontFamily: fontFamilies.headingBold,
+    fontSize: 18,
+    fontWeight: '600',
+  },
+  emojiBadge: {
+    fontSize: 20,
+  },
+  sectionLabel: {
+    fontFamily: fontFamilies.body,
+    fontSize: 11,
+    fontWeight: '600',
+    marginTop: spacing.xs,
+    marginBottom: 4,
   },
   taskItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: spacing.sm + 2,
-    borderTopWidth: 1,
-    borderTopColor: colors.divider,
+    paddingVertical: 6,
   },
   checkboxOutline: {
-    width: 20,
-    height: 20,
-    borderRadius: radius.xs,
-    borderWidth: 1.5,
-    borderColor: colors.outline,
+    width: 18,
+    height: 18,
+    borderRadius: 6,
+    borderWidth: 1.2,
     marginRight: spacing.md,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  checkboxDone: {
-    backgroundColor: colors.statusCompleted,
-    borderColor: colors.statusCompleted,
-  },
   checkmarkText: {
-    fontSize: 11,
-    fontWeight: '800',
+    fontSize: 10,
+    fontWeight: '700',
     color: '#FFFFFF',
   },
   taskText: {
-    ...typography.body,
-    fontSize: 15,
-    color: colors.textPrimary,
+    fontFamily: fontFamilies.body,
+    fontSize: 13,
     flex: 1,
   },
-  taskDoneText: {
-    textDecorationLine: 'line-through',
-    color: colors.textMuted,
-  },
   bottomSection: {
-    backgroundColor: colors.backgroundSecondary,
+    borderTopLeftRadius: radius.xl * 1.2, // 36px curved radius
+    borderTopRightRadius: radius.xl * 1.2,
     borderTopWidth: 1,
-    borderColor: colors.border,
-    paddingHorizontal: spacing.containerPadding, // 24dp
+    borderLeftWidth: 1,
+    borderRightWidth: 1,
+    paddingHorizontal: spacing.containerPadding,
     paddingTop: spacing.xl,
     paddingBottom: spacing.xl * 1.5,
     alignItems: 'center',
   },
+  iconBadge: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: spacing.md,
+  },
   title: {
-    ...typography.displayLarge,
-    fontSize: 26,
-    color: colors.textPrimary,
+    fontFamily: fontFamilies.headingBold,
+    fontSize: 24,
+    fontWeight: '700',
     marginBottom: spacing.xs + 2,
     textAlign: 'center',
   },
   description: {
-    ...typography.body,
-    fontSize: 14,
-    color: colors.textSecondary,
+    fontFamily: fontFamilies.body,
+    fontSize: 13,
     textAlign: 'center',
     marginBottom: spacing.xl,
-    lineHeight: 21,
+    lineHeight: 19,
+    paddingHorizontal: spacing.md,
   },
   primaryButton: {
     width: '100%',
-    height: 48,
-    backgroundColor: colors.primary,
-    borderRadius: radius.sm,
+    height: 50,
+    borderRadius: radius.pill, // Curved pill button
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: spacing.md,
   },
   primaryButtonText: {
-    ...typography.title,
-    color: colors.onPrimary,
+    fontFamily: fontFamilies.body,
     fontSize: 15,
+    fontWeight: '600',
   },
   secondaryLink: {
     paddingVertical: spacing.xs,
   },
   secondaryLinkText: {
-    ...typography.bodySm,
-    color: colors.textSecondary,
+    fontFamily: fontFamilies.body,
+    fontSize: 13,
   },
 });
