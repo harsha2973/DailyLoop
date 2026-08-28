@@ -2,138 +2,147 @@
 
 > **Plan less. Do more.**
 
-**DailyLoop** is a production-grade mobile productivity application engineered with **React Native CLI (TypeScript)** and a companion **Express.js / MongoDB** backend. Built around a minimal, dark visual language, DailyLoop reduces task management friction through dynamic task grouping, intelligent urgency sorting, real-time productivity analytics, and intuitive gesture-based interactions.
+**DailyLoop** is a production-grade mobile productivity application built with **React Native CLI (TypeScript)** and a companion **Express.js / MongoDB** backend. Engineered with a minimal, dark visual language, Futura PT typography, Hugeicons stroke vectors, and native Android background alarm scheduling, DailyLoop reduces task management friction through dynamic task grouping, intelligent urgency sorting, real-time analytics, and gesture-driven interactions.
 
 ---
 
-## 📸 Core Capabilities & Features
+## 📱 App Branding & Release APK
 
-### 1. Task Dashboard & Smart Grouping
-- **Dynamic Group By Toggle**: Switch task grouping seamlessly between:
-  - **Category**: `Work`, `Personal`, `Health`, `Study`, `General`
+- **App Name**: **Daily Loop**
+- **App Launcher Icon**: Minimalist Black & White Infinity Symbol ($\infty$)
+- **Production Version**: `1.1.0` (Build `2`)
+- **Backend API Deployment**: `https://dailyloop-to-do-app.onrender.com/api` (Render)
+- **Standalone Release APK**: [`DailyLoop-v1.1.0.apk`](file:///c:/Users/Harsha%20Gowda/Desktop/TO-DO%20List/TodoApp/DailyLoop-v1.1.0.apk)
+
+---
+
+## 📸 Key Features & Architecture Improvements
+
+### 1. Vibrant Task Cards & Dulled Completed States
+- **Vibrant Saturated Active Cards**:
+  - **Work**: Rich Saturated Coral Pink (`#FF5C6C`) with deep red vector graphic.
+  - **Personal**: Rich Saturated Mint Cyan (`#38D9A9`) with deep teal vector graphic.
+  - **Health**: Rich Saturated Golden Sunflower Yellow (`#FFD15C`) with deep amber vector graphic.
+  - **Study**: Rich Saturated Electric Blue (`#4A7DFF`) with deep indigo vector graphic.
+  - **Shopping**: Rich Saturated Royal Purple (`#A066FF`) with deep violet vector graphic.
+  - **General**: Crisp Off-White Card (`#F5F6F8`) with dark contrast text.
+- **Dulled Completed Cards**: When a task is marked complete, it automatically switches to a dulled surface background (`#1E232B` in dark mode / `#EAECEE` in light mode), low contrast watermark graphic, muted text with strikethrough, and dimmed container opacity.
+
+### 2. Gesture-Driven Swipe-to-Delete
+- **Zero UI Clutter**: Task rows have no permanent delete buttons.
+- **Animated Swipe Reveal**: Swiping left translates the foreground card. The red delete background uses gesture opacity interpolation (`actionOpacity`) so it remains **100% hidden** when unswiped and smoothly fades in during a swipe.
+- **Native Confirmation Dialog**: Pops a safety alert (*"Delete Task: Are you sure you want to delete '[Title]'?"*) before removing a task.
+
+### 3. Native Background Alarms & Smart Notification Messages
+- **Android AlarmManager**: Uses native Android `AlarmManager` and `BroadcastReceiver` so scheduled task alarms and 1-minute deadline warnings fire even when the app is completely closed or killed.
+- **Smart Adaptive Notification Formatting**:
+  - **Action Verbs**: `"cook your dinner"` $\rightarrow$ **`"It's time to cook your dinner"`**, `"finish your presentation"` $\rightarrow$ **`"It's time to finish your presentation"`**
+  - **Noun & Event Titles**: `"haircut"` $\rightarrow$ **`"It's time for your haircut"`**, `"doctor appointment"` $\rightarrow$ **`"It's time for your doctor appointment"`**
+- **Notification Completion Action**: Notifications feature an in-notification **Mark as Complete** action button that completes the task directly from Android's status bar.
+
+### 4. Typography & Icon System
+- **Futura PT Font System**: Entire app uses Futura PT (`FuturaPT-Bold`, `FuturaPT-Medium`, `FuturaPT-Book`, `FuturaPT-Regular`, `FuturaPT-Light`, `FuturaPT-Heavy`, `FuturaPT-Demi`) with clean Android native asset mapping.
+- **Hugeicons Vector Icons**: Uses `@hugeicons/react-native` stroke icons across navigation tabs, header actions, task category graphic accents, and modal screens.
+
+### 5. Task Dashboard & Smart Grouping
+- **Dynamic Group By Toggle**: Group tasks by:
+  - **Category**: `Work`, `Personal`, `Health`, `Study`, `Shopping`, `General`
   - **Time of Day**: `Morning` (5:00 AM – 11:59 AM), `Afternoon` (12:00 PM – 4:59 PM), `Evening` (5:00 PM – 8:59 PM), `Night` (9:00 PM – 4:59 AM)
-- **Sentence Case Titles**: Displays task titles formatted in clean sentence case (e.g., *Finish project proposal*).
-- **Date Selector Strip**: 7-day horizontal date picker with `ALL` view and dynamic relative date labels (*Today*, *Tomorrow*, *Yesterday*, *Aug 28*).
-- **Today's Progress Card**: Real-time progress bar computing task completion percentage for the current day.
+- **Sentence Case Formatting**: Task titles auto-format to sentence case.
+- **Date Selector Strip**: 7-day horizontal date picker with relative date labels (*Today*, *Tomorrow*, *Yesterday*, *Aug 28*).
+- **Minimal Progress Card**: Real-time progress tracker with a mint capsule progress bar.
 
-### 2. Horizontal Swipe-to-Delete
-- **Clean Task Cards**: No permanent delete buttons on task rows.
-- **Gesture Interaction**: Horizontal left-swipe gesture smoothly translates the task row to reveal a theme-styled Delete action.
-- **Confirmation Safety Modal**: Pops a native warning dialog (*Delete Task: Are you sure you want to delete "[Title]"?*) to prevent accidental deletion.
+### 6. Session Persistence & Boot Handling
+- **Boot Splash Screen**: Shows branded splash logo on app launch while restoring storage.
+- **Extended JWT Lifetime**: 30-day token expiration (`30d`).
+- **Auto 401 Recovery**: Intercepts `401 Unauthorized` responses, clears invalid local tokens, and safely redirects to Login.
 
-### 3. Real Inputs Insights & Routine Analytics
-- **Weekly Summary Chart**: Computes real completed task counts for each day of the current week (Monday through Sunday) and scales bar chart heights dynamically.
-- **Routine Consistency Rates**: Calculates 100% real completion rates (`completed / total`) for **Morning Routine**, **Workload Focus**, and **Night Routine**.
+### 7. Interactive Month Calendar & Analytics
+- **35-Cell Month Matrix**: Month calendar displaying task activity indicators for scheduled dates.
+- **Scheduled Day Agenda**: Inspects tasks for any selected date with scheduled times and priority indicators.
+- **Insights & Analytics**: Real weekly completed task summary chart and routine completion rates.
 
-### 4. Interactive Month Calendar
-- **35-Cell Month Grid**: Full month calendar matrix displaying task activity dots for scheduled dates.
-- **Scheduled Day Agenda**: Displays tasks for any selected date with scheduled times and priority indicators.
-- **Reliable Date & Time Pickers**: Separate Date and Time selector pills for setting task start times and deadlines.
-
-### 5. Dual Visual Theme Engine
-- **Dark Theme** (`#0D0D0D`): Pitch-black background with `#1A1A1A` surface cards, `#282828` subtle borders, and `light-content` status bar.
-- **Light Theme** (`#F7F6F3`): Warm off-white background with `#FFFFFF` surface cards, `#E9E9E7` borders, and `dark-content` status bar.
-- **Typography System**: Headings and titles styled with `Manrope`; body, metadata, and controls styled with `Inter`.
-- **AsyncStorage Persistence**: Theme choice persists across application restarts.
-
-### 6. User Profile & Preferences
-- **Single-Tap Inline Settings**: Tap **Default Priority** to cycle `High` ➔ `Medium` ➔ `Low`, or **Default Sorting** to cycle `Smart` ➔ `Time` ➔ `Priority` instantly without popup dialogs.
-- **Top-Right Profile Button**: Header avatar button navigating to account management, theme selection, and sign-out confirmation.
+### 8. User Profile & Account Management
+- **Edit Profile**: Screen for updating user display name and profile details.
+- **Change Password**: Dedicated screen for changing account password securely.
+- **Single-Tap Preferences**: Single-tap cycling for default priority and default sorting.
 
 ---
 
-## 🧮 Smart Urgency Sorting Algorithm
+## 🧮 Urgency Sorting Algorithm
 
-DailyLoop uses a multi-factor urgency algorithm (`src/utils/sortTasks.ts`) rather than sorting by a single static field:
+DailyLoop calculates task urgency dynamically using `src/utils/sortTasks.ts`:
 
 $$\text{Urgency Score} = \text{Hours Until Deadline} + \text{Priority Weight Penalty} + \text{Tiebreaker}$$
 
-- **Hours Until Deadline**: Becomes negative when a task is overdue, placing overdue items at the top.
-- **Priority Penalty**: Adds virtual hours to lower-priority tasks:
-  - `High Priority`: 0 hours
-  - `Medium Priority`: 6 hours
-  - `Low Priority`: 14 hours
-- **Tiebreaker**: Scheduled `dateTime` start time acts as a minor tiebreaker for tasks with identical urgency.
+- **Hours Until Deadline**: Overdue tasks yield negative values, placing them at the top.
+- **Priority Penalty**:
+  - `High Priority`: +0 hours
+  - `Medium Priority`: +6 hours
+  - `Low Priority`: +14 hours
 - **Completion Sink**: Completed tasks automatically sink below active tasks.
 
 ---
 
-## 🛠️ Project Architecture
+## 🛠️ Repository Structure
 
 ```
 TodoApp/
-├── App.tsx                      # Root component (SafeArea, ThemeProvider, AuthProvider)
+├── DailyLoop-v1.1.0.apk         # Standalone Production Release APK
+├── App.tsx                      # Root Application Wrapper
+├── backend/                     # Express.js / MongoDB Backend Service
+│   ├── src/
+│   │   ├── config/db.ts         # MongoDB Mongoose Connection
+│   │   ├── controllers/         # Auth & Task Controllers
+│   │   ├── middleware/auth.ts   # JWT Authentication Guard
+│   │   ├── models/              # User & Task Mongoose Schemas
+│   │   ├── routes/              # Express API Routes
+│   │   ├── utils/generateToken.ts # JWT Token Generator (30d)
+│   │   └── server.ts            # Server Entry Point & Health Check
+├── android/                     # Native Android Project Files
+│   └── app/src/main/
+│       ├── assets/fonts/        # Futura PT Custom OTF Font Assets
+│       ├── java/com/todoapp/    # Native AlarmManager & Notification Modules
+│       └── res/mipmap-*/        # Black & White Infinity App Icons
 ├── src/
-│   ├── api/                     # Axios API client & backend endpoints
-│   │   ├── client.ts            # Base URL configuration
-│   │   ├── authApi.ts           # Login & Registration requests
-│   │   └── taskApi.ts           # Task CRUD & completion requests
-│   ├── components/              # UI Components
-│   │   ├── SwipeableTaskRow.tsx # Horizontal swipe-to-delete row with confirmation
-│   │   ├── TaskItem.tsx         # Reusable task item card
-│   │   ├── Button.tsx           # Styled action buttons
-│   │   └── Input.tsx            # Standard form text input
-│   ├── context/
-│   │   ├── AuthContext.tsx      # JWT session management & AsyncStorage auth storage
-│   │   └── TaskContext.tsx      # Task CRUD, filters, sorting & default preference persistence
-│   ├── navigation/
-│   │   ├── AppNavigator.tsx     # Main Stack Navigator (Splash, Auth, MainTabs, AddEditTask, Profile)
-│   │   └── MainTabNavigator.tsx # Floating 3-Tab bar (Home, Insights, Calendar) + FAB (+ New)
-│   ├── screens/
-│   │   ├── SplashScreen.tsx     # Splash screen with DailyLoop ∞ logo mark
-│   │   ├── LoginScreen.tsx      # Account sign-in
-│   │   ├── RegisterScreen.tsx   # New account registration
-│   │   ├── HomeScreen.tsx       # Main dashboard with date strip, progress, & task groups
-│   │   ├── InsightsScreen.tsx   # Real weekly summary & routine analytics
-│   │   ├── CalendarScreen.tsx   # Month matrix & scheduled agenda
-│   │   ├── ProfileScreen.tsx    # Preferences & theme switcher
-│   │   └── AddEditTaskScreen.tsx# Task creation & editing form
-│   ├── theme/
-│   │   ├── colors.ts            # Theme palettes (Dark & Light) & Google Fonts typography
-│   │   └── ThemeContext.tsx     # Theme Provider & AsyncStorage persistence
-│   ├── types/                   # TypeScript interfaces (Task, TaskInput, Priority, ThemePalette)
-│   └── utils/                   # Relative date formatting & smart sort urgency algorithm
+│   ├── api/                     # Axios Client & Interceptors (401 Handler)
+│   ├── components/              # SwipeableTaskRow, AppLogo, FilterBar, etc.
+│   ├── context/                 # AuthContext & TaskContext
+│   ├── navigation/              # AppNavigator & MainTabNavigator
+│   ├── screens/                 # HomeScreen, InsightsScreen, CalendarScreen, ProfileScreen, etc.
+│   ├── services/                # NotificationService (Smart Reminder Formatting)
+│   ├── theme/                   # Colors, Palettes & Futura PT Typography tokens
+│   ├── types/                   # TypeScript Type Definitions
+│   └── utils/                   # Relative Date Formatter & Urgency Sort
 ```
 
 ---
 
-## 📱 Environment & Running Instructions
+## 💻 Building & Running Locally
 
-### Backend API Setup
-Ensure the DailyLoop backend service is running locally on port 5000:
+### 1. Backend API
 ```bash
 cd backend
 npm run dev
 ```
 
-### Mobile App Execution
+### 2. Frontend React Native App
+```bash
+# Install dependencies
+npm install
 
-1. **Install Dependencies**:
-   ```bash
-   cd TodoApp
-   npm install
-   ```
+# Run TypeScript type check
+npm run typecheck
 
-2. **Start Metro Bundler**:
-   ```bash
-   npx react-native start
-   ```
+# Start Metro Bundler
+npx react-native start
 
-3. **Run on Android Emulator**:
-   In a second terminal:
-   ```bash
-   # Enable port forwarding for Metro (8081) & Backend API (5000)
-   adb reverse tcp:8081 tcp:8081
-   adb reverse tcp:5000 tcp:5000
+# Run on Android Emulator
+npx react-native run-android
 
-   # Compile and launch Android app
-   npx react-native run-android
-   ```
-
-4. **Verify TypeScript Compilation**:
-   ```bash
-   npm run typecheck
-   ```
+# Build Production Release APK
+npm run build:android
+```
 
 ---
 
