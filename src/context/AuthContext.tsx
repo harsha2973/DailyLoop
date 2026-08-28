@@ -5,6 +5,7 @@ import React, {
   useMemo,
   useReducer,
 } from 'react';
+import { DeviceEventEmitter } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { User } from '../types';
 import { loginRequest, registerRequest } from '../api/authApi';
@@ -92,6 +93,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         dispatch({ type: 'RESTORE', payload: { user: null, token: null } });
       }
     })();
+
+    const sub = DeviceEventEmitter.addListener('onUnauthorized', () => {
+      dispatch({ type: 'LOGOUT' });
+    });
+
+    return () => sub.remove();
   }, []);
 
   const persistSession = async (user: User, token: string) => {

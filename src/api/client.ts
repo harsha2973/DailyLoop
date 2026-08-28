@@ -1,5 +1,6 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { DeviceEventEmitter } from 'react-native';
 
 /**
  * Base URL for the backend API.
@@ -24,10 +25,16 @@ apiClient.interceptors.request.use(async (config) => {
   return config;
 });
 
-// Surface a consistent error message from any failed request
+// Surface a consistent error message from any failed request & handle 401 automatically
 apiClient.interceptors.response.use(
   (response) => response,
-  (error) => {
+  async (error) => {
+    if (error?.response?.status === 401) {
+      // Token expired or invalid -> clear local auth session & emit onUnauthorized event
+      await AsyncStorage.multiRemove(['authToken', 'authUser']).catch(() => {});
+      DeviceEventEmitter.emit('onUnauthorized');
+    }
+
     const message =
       error?.response?.data?.message || error?.message || 'Something went wrong';
     const customErr: any = new Error(message);

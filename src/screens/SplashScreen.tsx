@@ -3,12 +3,14 @@ import { StyleSheet, Text, View, ActivityIndicator } from 'react-native';
 import { colors, radius, spacing, typography } from '../theme/colors';
 import { AppLogo } from '../components/AppLogo';
 
-export const SplashScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
+export const SplashScreen: React.FC<{ navigation?: any }> = ({ navigation }) => {
   useEffect(() => {
-    const timer = setTimeout(() => {
-      navigation.replace('Onboarding');
-    }, 1500);
-    return () => clearTimeout(timer);
+    if (navigation && typeof navigation.replace === 'function') {
+      const timer = setTimeout(() => {
+        navigation.replace('Onboarding');
+      }, 1500);
+      return () => clearTimeout(timer);
+    }
   }, [navigation]);
 
   return (

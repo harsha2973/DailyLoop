@@ -60,11 +60,7 @@ export const AppNavigator: React.FC = () => {
   const { user, token, isLoading } = useAuth();
 
   if (isLoading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={colors.primary} />
-      </View>
-    );
+    return <SplashScreen />;
   }
 
   return (
