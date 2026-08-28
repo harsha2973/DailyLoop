@@ -11,6 +11,8 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
+import { HugeiconsIcon } from '@hugeicons/react-native';
+import { ArrowLeft01Icon } from '@hugeicons/core-free-icons';
 import { changePasswordRequest } from '../api/authApi';
 import { useTheme } from '../theme/ThemeContext';
 import { radius, spacing, fontFamilies, shadows } from '../theme/colors';
@@ -104,8 +106,8 @@ export const ChangePasswordScreen: React.FC<{ navigation: any }> = ({ navigation
     <SafeAreaView style={[styles.flex, { backgroundColor: theme.background }]}>
       {/* Top Header */}
       <View style={[styles.header, { borderBottomColor: theme.border }]}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-          <Text style={[styles.backText, { color: theme.textSecondary }]}>← Back</Text>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn} activeOpacity={0.7}>
+          <HugeiconsIcon icon={ArrowLeft01Icon} size={20} color={theme.textPrimary} />
         </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: theme.textPrimary }]}>Change Password</Text>
         <View style={styles.headerSpacer} />
@@ -232,19 +234,17 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
   },
   backBtn: {
-    paddingVertical: spacing.xs,
-  },
-  backText: {
-    fontFamily: fontFamilies.body,
-    fontSize: 14,
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'flex-start',
   },
   headerTitle: {
     fontFamily: fontFamilies.headingBold,
     fontSize: 18,
-    fontWeight: '600',
   },
   headerSpacer: {
-    width: 48,
+    width: 40,
   },
   container: {
     padding: spacing.containerPadding,
@@ -279,7 +279,6 @@ const styles = StyleSheet.create({
     fontSize: 11,
     marginBottom: spacing.xs,
     letterSpacing: 0.5,
-    fontWeight: '500',
   },
   inputContainer: {
     flexDirection: 'row',
@@ -310,8 +309,7 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
   },
   primaryButtonText: {
-    fontFamily: fontFamilies.body,
+    fontFamily: fontFamilies.headingBold,
     fontSize: 14,
-    fontWeight: '600',
   },
 });

@@ -14,6 +14,7 @@ import {
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../theme/ThemeContext';
 import { radius, spacing, fontFamilies, shadows } from '../theme/colors';
+import { AppLogo } from '../components/AppLogo';
 
 export const RegisterScreen: React.FC<{ navigation: any; route?: any }> = ({
   navigation,
@@ -62,9 +63,14 @@ export const RegisterScreen: React.FC<{ navigation: any; route?: any }> = ({
         <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
           {/* Header */}
           <View style={styles.header}>
-            <View style={[styles.logoBadge, { backgroundColor: theme.primaryButton }, shadows.sm]}>
-              <Text style={[styles.logoMark, { color: theme.primaryButtonText }]}>∞</Text>
-            </View>
+            <AppLogo
+              size={32}
+              containerSize={56}
+              backgroundColor={theme.primaryButton}
+              color={theme.primaryButtonText}
+              borderRadius={radius.sm}
+              containerStyle={shadows.sm}
+            />
             <Text style={[styles.title, { color: theme.textPrimary }]}>Join DailyLoop</Text>
             <Text style={[styles.subtitle, { color: theme.textSecondary }]}>
               Plan less. Do more.
@@ -183,12 +189,10 @@ const styles = StyleSheet.create({
   logoMark: {
     fontFamily: fontFamilies.headingBold,
     fontSize: 26,
-    fontWeight: '700',
   },
   title: {
     fontFamily: fontFamilies.headingBold,
     fontSize: 26,
-    fontWeight: '700',
     textAlign: 'center',
   },
   subtitle: {
@@ -222,7 +226,6 @@ const styles = StyleSheet.create({
     fontSize: 11,
     marginBottom: spacing.xs,
     letterSpacing: 0.5,
-    fontWeight: '500',
   },
   inputContainer: {
     flexDirection: 'row',
@@ -254,9 +257,8 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   primaryButtonText: {
-    fontFamily: fontFamilies.body,
+    fontFamily: fontFamilies.headingBold,
     fontSize: 15,
-    fontWeight: '600',
   },
   loginLink: {
     alignItems: 'center',
@@ -267,6 +269,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
   },
   loginBold: {
-    fontWeight: '600',
+    fontFamily: fontFamilies.headingBold,
   },
 });

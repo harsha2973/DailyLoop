@@ -1,6 +1,7 @@
 import React from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, SafeAreaView, Dimensions } from 'react-native';
-import Icon from 'react-native-vector-icons/Feather';
+import { HugeiconsIcon } from '@hugeicons/react-native';
+import { CheckmarkCircle01Icon, Clock01Icon, Tick01Icon } from '@hugeicons/core-free-icons';
 import { useTheme } from '../theme/ThemeContext';
 import { radius, spacing, fontFamilies, shadows } from '../theme/colors';
 
@@ -22,7 +23,7 @@ export const OnboardingScreen: React.FC<{ navigation: any }> = ({ navigation }) 
           <Text style={[styles.sectionLabel, { color: theme.textMuted }]}>To do</Text>
           <View style={styles.taskItem}>
             <View style={[styles.checkboxOutline, { backgroundColor: theme.accent, borderColor: theme.accent }]}>
-              <Text style={styles.checkmarkText}>✓</Text>
+              <HugeiconsIcon icon={Tick01Icon} size={10} color="#FFFFFF" />
             </View>
             <Text style={[styles.taskText, { color: theme.textPrimary }]}>Morning workout</Text>
           </View>
@@ -30,7 +31,7 @@ export const OnboardingScreen: React.FC<{ navigation: any }> = ({ navigation }) 
           <Text style={[styles.sectionLabel, { color: theme.textMuted }]}>Completed</Text>
           <View style={styles.taskItem}>
             <View style={[styles.checkboxOutline, { backgroundColor: theme.statusCompleted, borderColor: theme.statusCompleted }]}>
-              <Text style={styles.checkmarkText}>✓</Text>
+              <HugeiconsIcon icon={Tick01Icon} size={10} color="#FFFFFF" />
             </View>
             <Text style={[styles.taskText, { color: theme.textMuted, textDecorationLine: 'line-through' }]}>
               Drink water
@@ -40,7 +41,7 @@ export const OnboardingScreen: React.FC<{ navigation: any }> = ({ navigation }) 
           <Text style={[styles.sectionLabel, { color: theme.textMuted }]}>Pending</Text>
           <View style={styles.taskItem}>
             <View style={[styles.checkboxOutline, { borderColor: theme.borderStrong }]}>
-              <Icon name="clock" size={10} color={theme.textMuted} />
+              <HugeiconsIcon icon={Clock01Icon} size={10} color={theme.textMuted} />
             </View>
             <Text style={[styles.taskText, { color: theme.textPrimary }]}>Evening walk</Text>
           </View>
@@ -50,7 +51,7 @@ export const OnboardingScreen: React.FC<{ navigation: any }> = ({ navigation }) 
       {/* Bottom Content Card */}
       <View style={[styles.bottomSection, { backgroundColor: theme.surface, borderColor: theme.border }, shadows.lg]}>
         <View style={[styles.iconBadge, { backgroundColor: theme.surfaceSecondary }]}>
-          <Icon name="check-circle" size={32} color={theme.textPrimary} />
+          <HugeiconsIcon icon={CheckmarkCircle01Icon} size={32} color={theme.textPrimary} />
         </View>
 
         <Text style={[styles.title, { color: theme.textPrimary }]}>Welcome to DailyLoop!</Text>
@@ -105,7 +106,6 @@ const styles = StyleSheet.create({
   cardHeader: {
     fontFamily: fontFamilies.headingBold,
     fontSize: 18,
-    fontWeight: '600',
   },
   emojiBadge: {
     fontSize: 20,
@@ -113,7 +113,6 @@ const styles = StyleSheet.create({
   sectionLabel: {
     fontFamily: fontFamilies.body,
     fontSize: 11,
-    fontWeight: '600',
     marginTop: spacing.xs,
     marginBottom: 4,
   },
@@ -133,7 +132,6 @@ const styles = StyleSheet.create({
   },
   checkmarkText: {
     fontSize: 10,
-    fontWeight: '700',
     color: '#FFFFFF',
   },
   taskText: {
@@ -163,7 +161,6 @@ const styles = StyleSheet.create({
   title: {
     fontFamily: fontFamilies.headingBold,
     fontSize: 24,
-    fontWeight: '700',
     marginBottom: spacing.xs + 2,
     textAlign: 'center',
   },
@@ -184,9 +181,8 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   primaryButtonText: {
-    fontFamily: fontFamilies.body,
+    fontFamily: fontFamilies.headingBold,
     fontSize: 15,
-    fontWeight: '600',
   },
   secondaryLink: {
     paddingVertical: spacing.xs,

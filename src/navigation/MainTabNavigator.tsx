@@ -1,15 +1,55 @@
-import React from 'react';
-import { StyleSheet, View, Text, TouchableOpacity, SafeAreaView } from 'react-native';
-import Icon from 'react-native-vector-icons/Feather';
+import React, { useState } from 'react';
+import {
+  StyleSheet,
+  View,
+  Text,
+  TouchableOpacity,
+  SafeAreaView,
+  LayoutAnimation,
+  Platform,
+  UIManager,
+} from 'react-native';
+import { HugeiconsIcon } from '@hugeicons/react-native';
+import {
+  Home01Icon,
+  Analytics01Icon,
+  Calendar01Icon,
+  Add01Icon,
+} from '@hugeicons/core-free-icons';
 import { HomeScreen } from '../screens/HomeScreen';
 import { InsightsScreen } from '../screens/InsightsScreen';
 import { CalendarScreen } from '../screens/CalendarScreen';
 import { useTheme } from '../theme/ThemeContext';
 import { radius, spacing, fontFamilies, shadows } from '../theme/colors';
 
+if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
+
 export const MainTabNavigator: React.FC<{ navigation: any }> = ({ navigation }) => {
-  const [activeTab, setActiveTab] = React.useState<'home' | 'insights' | 'calendar'>('home');
+  const [activeTab, setActiveTab] = useState<'home' | 'insights' | 'calendar'>('home');
   const { theme } = useTheme();
+
+  const handleTabChange = (tab: 'home' | 'insights' | 'calendar') => {
+    if (tab !== activeTab) {
+      LayoutAnimation.configureNext({
+        duration: 220,
+        create: {
+          type: LayoutAnimation.Types.easeInEaseOut,
+          property: LayoutAnimation.Properties.opacity,
+        },
+        update: {
+          type: LayoutAnimation.Types.easeInEaseOut,
+          springDamping: 0.8,
+        },
+        delete: {
+          type: LayoutAnimation.Types.easeInEaseOut,
+          property: LayoutAnimation.Properties.opacity,
+        },
+      });
+      setActiveTab(tab);
+    }
+  };
 
   return (
     <View style={[styles.container, { backgroundColor: theme.background }]}>
@@ -25,71 +65,56 @@ export const MainTabNavigator: React.FC<{ navigation: any }> = ({ navigation }) 
         <View style={[styles.bottomBar, { backgroundColor: theme.surface, borderColor: theme.border }, shadows.md]}>
           {/* Home Tab */}
           <TouchableOpacity
-            style={[styles.tabItem, activeTab === 'home' && { backgroundColor: theme.surfaceSecondary }]}
-            onPress={() => setActiveTab('home')}
+            style={[styles.tabItem, activeTab === 'home' && { backgroundColor: theme.primaryButton }]}
+            onPress={() => handleTabChange('home')}
             activeOpacity={0.8}
           >
-            <Icon
-              name="home"
-              size={16}
-              color={activeTab === 'home' ? theme.textPrimary : theme.textMuted}
-              style={styles.tabIcon}
-            />
-            <Text
-              style={[
-                styles.tabText,
-                { color: activeTab === 'home' ? theme.textPrimary : theme.textMuted },
-                activeTab === 'home' && styles.tabTextActive,
-              ]}
-            >
-              Home
-            </Text>
+            <View style={activeTab === 'home' ? styles.tabIconActive : undefined}>
+              <HugeiconsIcon
+                icon={Home01Icon}
+                size={18}
+                color={activeTab === 'home' ? theme.primaryButtonText : theme.textMuted}
+              />
+            </View>
+            {activeTab === 'home' && (
+              <Text style={[styles.tabText, { color: theme.primaryButtonText }]}>Home</Text>
+            )}
           </TouchableOpacity>
 
           {/* Insights Tab */}
           <TouchableOpacity
-            style={[styles.tabItem, activeTab === 'insights' && { backgroundColor: theme.surfaceSecondary }]}
-            onPress={() => setActiveTab('insights')}
+            style={[styles.tabItem, activeTab === 'insights' && { backgroundColor: theme.primaryButton }]}
+            onPress={() => handleTabChange('insights')}
             activeOpacity={0.8}
           >
-            <Icon
-              name="bar-chart-2"
-              size={16}
-              color={activeTab === 'insights' ? theme.textPrimary : theme.textMuted}
-              style={styles.tabIcon}
-            />
-            <Text
-              style={[
-                styles.tabText,
-                { color: activeTab === 'insights' ? theme.textPrimary : theme.textMuted },
-                activeTab === 'insights' && styles.tabTextActive,
-              ]}
-            >
-              Insights
-            </Text>
+            <View style={activeTab === 'insights' ? styles.tabIconActive : undefined}>
+              <HugeiconsIcon
+                icon={Analytics01Icon}
+                size={18}
+                color={activeTab === 'insights' ? theme.primaryButtonText : theme.textMuted}
+              />
+            </View>
+            {activeTab === 'insights' && (
+              <Text style={[styles.tabText, { color: theme.primaryButtonText }]}>Insights</Text>
+            )}
           </TouchableOpacity>
 
           {/* Calendar Tab */}
           <TouchableOpacity
-            style={[styles.tabItem, activeTab === 'calendar' && { backgroundColor: theme.surfaceSecondary }]}
-            onPress={() => setActiveTab('calendar')}
+            style={[styles.tabItem, activeTab === 'calendar' && { backgroundColor: theme.primaryButton }]}
+            onPress={() => handleTabChange('calendar')}
             activeOpacity={0.8}
           >
-            <Icon
-              name="calendar"
-              size={16}
-              color={activeTab === 'calendar' ? theme.textPrimary : theme.textMuted}
-              style={styles.tabIcon}
-            />
-            <Text
-              style={[
-                styles.tabText,
-                { color: activeTab === 'calendar' ? theme.textPrimary : theme.textMuted },
-                activeTab === 'calendar' && styles.tabTextActive,
-              ]}
-            >
-              Calendar
-            </Text>
+            <View style={activeTab === 'calendar' ? styles.tabIconActive : undefined}>
+              <HugeiconsIcon
+                icon={Calendar01Icon}
+                size={18}
+                color={activeTab === 'calendar' ? theme.primaryButtonText : theme.textMuted}
+              />
+            </View>
+            {activeTab === 'calendar' && (
+              <Text style={[styles.tabText, { color: theme.primaryButtonText }]}>Calendar</Text>
+            )}
           </TouchableOpacity>
         </View>
 
@@ -99,7 +124,7 @@ export const MainTabNavigator: React.FC<{ navigation: any }> = ({ navigation }) 
           onPress={() => navigation.navigate('AddEditTask')}
           activeOpacity={0.85}
         >
-          <Text style={[styles.fabText, { color: theme.primaryButtonText }]}>+</Text>
+          <HugeiconsIcon icon={Add01Icon} size={24} color={theme.primaryButtonText} />
         </TouchableOpacity>
       </SafeAreaView>
     </View>
@@ -127,7 +152,7 @@ const styles = StyleSheet.create({
   bottomBar: {
     flex: 1,
     height: 54,
-    borderRadius: radius.pill,
+    borderRadius: 24,
     borderWidth: 1,
     flexDirection: 'row',
     alignItems: 'center',
@@ -137,19 +162,17 @@ const styles = StyleSheet.create({
   tabItem: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     paddingHorizontal: 14,
     paddingVertical: 8,
-    borderRadius: radius.pill,
+    borderRadius: 16,
   },
-  tabIcon: {
+  tabIconActive: {
     marginRight: 6,
   },
   tabText: {
     fontFamily: fontFamilies.body,
     fontSize: 13,
-    fontWeight: '500',
-  },
-  tabTextActive: {
     fontWeight: '600',
   },
   fab: {

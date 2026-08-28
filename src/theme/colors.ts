@@ -1,13 +1,15 @@
 import { Platform } from 'react-native';
 
-const headingFont = Platform.OS === 'ios' ? 'Glacial Indifference' : 'GlacialIndifference-Bold';
-const headingRegularFont = Platform.OS === 'ios' ? 'Glacial Indifference' : 'GlacialIndifference-Regular';
-const headingItalicFont = Platform.OS === 'ios' ? 'Glacial Indifference' : 'GlacialIndifference-Italic';
-const bodyFont = Platform.OS === 'ios' ? 'Helvetica Now Display' : 'Helvetica';
+const headingFont = 'FuturaPT-Bold';
+const headingRegularFont = 'FuturaPT-Book';
+const headingItalicFont = 'FuturaPT-Light';
+const bodyFont = 'FuturaPT-Book';
 
 export const fontFamilies = {
   heading: headingFont,
-  headingBold: headingFont,
+  headingBold: 'FuturaPT-Bold',
+  headingSemiBold: 'FuturaPT-Medium',
+  headingMedium: 'FuturaPT-Medium',
   headingRegular: headingRegularFont,
   headingItalic: headingItalicFont,
   body: bodyFont,
@@ -86,19 +88,19 @@ export const darkTheme: ThemePalette = {
   surfaceElevated: '#222222',
   glassSurface: '#1A1A1A',
   glassSurfaceElevated: '#222222',
-  glassBorder: '#282828',
-  glassBorderSubtle: '#202020',
+  glassBorder: 'transparent',
+  glassBorderSubtle: 'transparent',
   glassShadow: 'rgba(0, 0, 0, 0.40)',
   textPrimary: '#F5F5F5',
   textSecondary: '#A0A0A0',
   textMuted: '#686868',
   textDisabled: '#4A4A4A',
-  border: '#282828',
-  borderStrong: '#444444',
-  borderPrimary: '#282828',
-  borderSecondary: '#202020',
+  border: 'transparent',
+  borderStrong: '#282828',
+  borderPrimary: 'transparent',
+  borderSecondary: 'transparent',
   divider: '#202020',
-  outline: '#333333',
+  outline: 'transparent',
   primary: '#FFFFFF',
   onPrimary: '#0D0D0D',
   primaryButton: '#FFFFFF',
@@ -199,11 +201,11 @@ export const colors = {
 // Corner Radii Tokens
 export const radius = {
   none: 0,
-  xs: 8,
-  sm: 12,
-  md: 18,
-  lg: 24,
-  xl: 32,
+  xs: 6,
+  sm: 10,
+  md: 12,
+  lg: 16,
+  xl: 20,
   pill: 999,
 };
 
@@ -247,27 +249,22 @@ export const typography = {
   displayLarge: {
     fontFamily: fontFamilies.headingBold,
     fontSize: 26,
-    fontWeight: '700' as const,
     letterSpacing: -0.5,
   },
   title: {
     fontFamily: fontFamilies.headingBold,
     fontSize: 18,
-    fontWeight: '600' as const,
   },
   body: {
     fontFamily: fontFamilies.body,
     fontSize: 14,
-    fontWeight: '400' as const,
   },
   bodySm: {
     fontFamily: fontFamilies.body,
     fontSize: 13,
-    fontWeight: '400' as const,
   },
   caption: {
     fontFamily: fontFamilies.body,
     fontSize: 11,
-    fontWeight: '500' as const,
   },
 };

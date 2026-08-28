@@ -5,6 +5,62 @@ import { Task } from '../types';
 const NOTIFICATIONS_ENABLED_KEY = 'notifications_enabled';
 const NOTIFIED_TASKS_KEY = 'notified_task_ids';
 
+export const formatTaskReminderMessage = (rawTitle: string): string => {
+  if (!rawTitle || !rawTitle.trim()) {
+    return "It's time for your task!";
+  }
+
+  const title = rawTitle.trim();
+  const lower = title.toLowerCase();
+
+  // Normalize if title already starts with "it's time to" or "time to" / "time for"
+  if (lower.startsWith("it's time to ") || lower.startsWith("it is time to ")) {
+    return `It's time to ${title.slice(title.indexOf("to ") + 3)}`;
+  }
+  if (lower.startsWith("time to ")) {
+    return `It's time to ${title.slice(8)}`;
+  }
+  if (lower.startsWith("time for ")) {
+    return `It's time for ${title.slice(9)}`;
+  }
+
+  const firstWord = lower.split(' ')[0];
+
+  // Specific noun starters
+  const nounStarters = new Set(['meeting', 'appointment', 'session', 'class', 'interview', 'workout']);
+  if (nounStarters.has(firstWord)) {
+    const formatted = title.charAt(0).toLowerCase() + title.slice(1);
+    if (lower.startsWith('a ') || lower.startsWith('an ') || lower.startsWith('the ') || lower.startsWith('your ')) {
+      return `It's time for ${formatted}`;
+    }
+    return `It's time for your ${formatted}`;
+  }
+
+  const commonVerbs = new Set([
+    'cook', 'finish', 'prepare', 'go', 'do', 'make', 'take', 'clean', 'wash',
+    'study', 'read', 'write', 'complete', 'work', 'buy', 'send', 'email',
+    'pay', 'review', 'check', 'submit', 'organize', 'fix', 'update', 'design',
+    'build', 'create', 'attend', 'schedule', 'book', 'pick', 'drop',
+    'start', 'run', 'walk', 'exercise', 'drink', 'eat', 'order', 'setup', 'set',
+    'practice', 'learn', 'plan', 'water', 'feed', 'iron', 'fold', 'cut', 'get',
+    'shop', 'bring', 'fetch', 'call', 'talk', 'chat', 'discuss'
+  ]);
+
+  const isFirstWordVerb = commonVerbs.has(firstWord) || (firstWord.endsWith('ing') && !nounStarters.has(firstWord));
+
+  if (isFirstWordVerb) {
+    const formattedTitle = title.charAt(0).toLowerCase() + title.slice(1);
+    return `It's time to ${formattedTitle}`;
+  }
+
+  const nounTitle = title.charAt(0).toLowerCase() + title.slice(1);
+  if (lower.startsWith('a ') || lower.startsWith('an ') || lower.startsWith('the ') || lower.startsWith('your ') || lower.startsWith('my ')) {
+    return `It's time for ${nounTitle}`;
+  }
+
+  return `It's time for your ${nounTitle}`;
+};
+
 export class NotificationService {
   private static timerId: any = null;
   private static activeNotificationCallback: ((task: Task) => void) | null = null;
@@ -89,18 +145,23 @@ export class NotificationService {
 
     const nowMs = Date.now();
 
-    // Helper integer hashing for unique alarm IDs per task stage
-    const baseId = Math.abs(
-      task._id.split('').reduce((acc, char) => (acc << 5) - acc + char.charCodeAt(0), 0)
-    );
+    const getAlarmId = (taskId: string, stage: number): number => {
+      let hash = 0;
+      const str = `${taskId}_stage_${stage}`;
+      for (let i = 0; i < str.length; i++) {
+        hash = (hash << 5) - hash + str.charCodeAt(i);
+        hash |= 0;
+      }
+      return Math.abs(hash) % 10000000;
+    };
 
     // Stage 1: Scheduled Time Arrival (dateTime) -> No Mark as Complete button
     if (task.dateTime) {
       const scheduledMs = new Date(task.dateTime).getTime();
       if (!isNaN(scheduledMs) && scheduledMs > nowMs) {
         const title = 'Task Reminder';
-        const body = `It's time to work on: "${task.title}"`;
-        const alarmId = baseId % 1000000 + 1;
+        const body = formatTaskReminderMessage(task.title);
+        const alarmId = getAlarmId(task._id, 1);
         NativeModules.NativeNotificationModule.scheduleAlarm(title, body, scheduledMs, task._id, false, alarmId);
       }
     }
@@ -114,7 +175,7 @@ export class NotificationService {
         if (approachingMs > nowMs) {
           const title = 'Deadline Approaching';
           const body = `"${task.title}" deadline is in 1 minute.`;
-          const alarmId = baseId % 1000000 + 2;
+          const alarmId = getAlarmId(task._id, 2);
           NativeModules.NativeNotificationModule.scheduleAlarm(title, body, approachingMs, task._id, false, alarmId);
         }
 
@@ -122,7 +183,7 @@ export class NotificationService {
         if (deadlineMs > nowMs) {
           const title = 'Deadline Reached!';
           const body = `"${task.title}" deadline has arrived.`;
-          const alarmId = baseId % 1000000 + 3;
+          const alarmId = getAlarmId(task._id, 3);
           NativeModules.NativeNotificationModule.scheduleAlarm(title, body, deadlineMs, task._id, true, alarmId);
         }
       }
@@ -136,9 +197,12 @@ export class NotificationService {
     showCompleteAction: boolean
   ) {
     if (Platform.OS === 'android' && NativeModules.NativeNotificationModule) {
-      const notificationId = Math.abs(
-        taskId.split('').reduce((acc, char) => (acc << 5) - acc + char.charCodeAt(0), 0)
-      );
+      let hash = 0;
+      for (let i = 0; i < taskId.length; i++) {
+        hash = (hash << 5) - hash + taskId.charCodeAt(i);
+        hash |= 0;
+      }
+      const notificationId = Math.abs(hash) % 10000000;
       NativeModules.NativeNotificationModule.showNotification(
         title,
         body,
@@ -173,12 +237,12 @@ export class NotificationService {
           const scheduledDiffMs = now.getTime() - scheduledDate.getTime();
           const scheduledKey = `${task._id}_scheduled_${task.dateTime}`;
 
-          if (scheduledDiffMs >= 0 && scheduledDiffMs <= 2 * 60 * 1000 && !notifiedIds.includes(scheduledKey)) {
+          if (scheduledDiffMs >= 0 && scheduledDiffMs <= 15 * 60 * 1000 && !notifiedIds.includes(scheduledKey)) {
             notifiedIds.push(scheduledKey);
             await AsyncStorage.setItem(NOTIFIED_TASKS_KEY, JSON.stringify(notifiedIds));
 
             const title = 'Task Reminder';
-            const body = `It's time to work on: "${task.title}"`;
+            const body = formatTaskReminderMessage(task.title);
 
             this.triggerNativeSystemNotification(title, body, task._id, false);
 
@@ -198,7 +262,7 @@ export class NotificationService {
           const approachingDiffMs = now.getTime() - approachingDate.getTime();
           const approachingKey = `${task._id}_approaching_${task.deadline}`;
 
-          if (approachingDiffMs >= 0 && approachingDiffMs <= 2 * 60 * 1000 && !notifiedIds.includes(approachingKey)) {
+          if (approachingDiffMs >= 0 && approachingDiffMs <= 15 * 60 * 1000 && !notifiedIds.includes(approachingKey)) {
             notifiedIds.push(approachingKey);
             await AsyncStorage.setItem(NOTIFIED_TASKS_KEY, JSON.stringify(notifiedIds));
 
@@ -216,7 +280,7 @@ export class NotificationService {
           const deadlineDiffMs = now.getTime() - deadlineDate.getTime();
           const reachedKey = `${task._id}_reached_${task.deadline}`;
 
-          if (deadlineDiffMs >= 0 && deadlineDiffMs <= 5 * 60 * 1000 && !notifiedIds.includes(reachedKey)) {
+          if (deadlineDiffMs >= 0 && deadlineDiffMs <= 15 * 60 * 1000 && !notifiedIds.includes(reachedKey)) {
             notifiedIds.push(reachedKey);
             await AsyncStorage.setItem(NOTIFIED_TASKS_KEY, JSON.stringify(notifiedIds));
 
@@ -238,18 +302,30 @@ export class NotificationService {
    * Starts monitoring scheduled tasks every 3 seconds.
    */
   static startMonitoring(getTasks: () => Task[]) {
-    this.requestPermission();
+    this.requestPermission().catch(() => {});
     this.tasksGetter = getTasks;
 
     if (this.timerId) clearInterval(this.timerId);
 
     // Initial check & alarm scheduling
-    this.checkTasks(getTasks());
+    if (getTasks) {
+      try {
+        const tasks = getTasks();
+        if (tasks) {
+          this.checkTasks(tasks).catch(() => {});
+        }
+      } catch {}
+    }
 
     // Recurring interval check
     this.timerId = setInterval(() => {
       if (this.tasksGetter) {
-        this.checkTasks(this.tasksGetter());
+        try {
+          const tasks = this.tasksGetter();
+          if (tasks) {
+            this.checkTasks(tasks).catch(() => {});
+          }
+        } catch {}
       }
     }, 3000);
   }

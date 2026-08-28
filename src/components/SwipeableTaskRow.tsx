@@ -8,7 +8,18 @@ import {
   PanResponder,
   Alert,
 } from 'react-native';
-import Icon from 'react-native-vector-icons/Feather';
+import { HugeiconsIcon } from '@hugeicons/react-native';
+import {
+  Tick01Icon,
+  Delete02Icon,
+  Briefcase01Icon,
+  Activity01Icon,
+  UserIcon,
+  BookOpen01Icon,
+  ShoppingBag01Icon,
+  Folder01Icon,
+  Clock01Icon,
+} from '@hugeicons/core-free-icons';
 import { Task, Priority } from '../types';
 import { radius, spacing, fontFamilies, shadows } from '../theme/colors';
 import { ThemePalette } from '../theme/colors';
@@ -35,51 +46,83 @@ interface CategoryStyle {
   graphicColor: string;
   textColor: string;
   subtextColor: string;
-  badgeBg: string;
-  shapeType: 'trapezoid' | 'flower' | 'arc' | 'polygon' | 'badge';
+  icon: any;
 }
 
 const CATEGORY_STYLES: Record<string, CategoryStyle> = {
   Work: {
-    bg: '#FFB8B3', // Pastel Coral
-    graphicColor: '#FF6B6B',
-    textColor: '#2D1210',
-    subtextColor: '#5E2B27',
-    badgeBg: 'rgba(255, 255, 255, 0.75)',
-    shapeType: 'flower',
+    bg: '#FF5C6C', // Vibrant Coral Pink (Image 2)
+    graphicColor: '#D93B4C',
+    textColor: '#1F0508',
+    subtextColor: '#4F111A',
+    icon: Briefcase01Icon,
   },
   Personal: {
-    bg: '#8EE0CA', // Pastel Mint
-    graphicColor: '#36B395',
-    textColor: '#0A2D23',
-    subtextColor: '#154A3B',
-    badgeBg: 'rgba(255, 255, 255, 0.75)',
-    shapeType: 'arc',
+    bg: '#38D9A9', // Vibrant Mint Cyan (Image 2)
+    graphicColor: '#14A37A',
+    textColor: '#031F1A',
+    subtextColor: '#0C4F43',
+    icon: UserIcon,
   },
   Health: {
-    bg: '#FFF099', // Pastel Yellow
-    graphicColor: '#F5C724',
-    textColor: '#2B2508',
-    subtextColor: '#544910',
-    badgeBg: 'rgba(255, 255, 255, 0.75)',
-    shapeType: 'polygon',
+    bg: '#FFD15C', // Vibrant Golden Sunflower Yellow (Image 2)
+    graphicColor: '#E09F00',
+    textColor: '#1F1700',
+    subtextColor: '#4F3C00',
+    icon: Activity01Icon,
   },
   Study: {
-    bg: '#2F3842', // Dark Charcoal Slate
-    graphicColor: '#4A72B8',
+    bg: '#4A7DFF', // Vibrant Electric Blue (Image 2)
+    graphicColor: '#2248B8',
     textColor: '#FFFFFF',
-    subtextColor: '#B0C2DE',
-    badgeBg: 'rgba(255, 255, 255, 0.2)',
-    shapeType: 'badge',
+    subtextColor: '#D0DDFF',
+    icon: BookOpen01Icon,
+  },
+  Shopping: {
+    bg: '#A066FF', // Vibrant Royal Purple
+    graphicColor: '#7226D9',
+    textColor: '#FFFFFF',
+    subtextColor: '#E6D6FF',
+    icon: ShoppingBag01Icon,
   },
   General: {
-    bg: '#F5F4EE', // Off-White Ivory
-    graphicColor: '#D8D4C8',
-    textColor: '#1C1A17',
-    subtextColor: '#5C584E',
-    badgeBg: 'rgba(0, 0, 0, 0.06)',
-    shapeType: 'trapezoid',
+    bg: '#F5F6F8', // Crisp Off-White Card (Image 2)
+    graphicColor: '#D0D4DC',
+    textColor: '#1C2024',
+    subtextColor: '#555E68',
+    icon: Folder01Icon,
   },
+};
+
+const getCategoryStyle = (catName: string): CategoryStyle => {
+  if (!catName || !catName.trim()) return CATEGORY_STYLES.General;
+  const name = catName.trim();
+  if (CATEGORY_STYLES[name]) return CATEGORY_STYLES[name];
+
+  const lower = name.toLowerCase();
+  if (lower.includes('work') || lower.includes('job') || lower.includes('office') || lower.includes('code') || lower.includes('dev') || lower.includes('presentation')) {
+    return CATEGORY_STYLES.Work;
+  }
+  if (lower.includes('health') || lower.includes('gym') || lower.includes('fit') || lower.includes('care') || lower.includes('walk')) {
+    return CATEGORY_STYLES.Health;
+  }
+  if (lower.includes('personal') || lower.includes('life') || lower.includes('home')) {
+    return CATEGORY_STYLES.Personal;
+  }
+  if (lower.includes('study') || lower.includes('school') || lower.includes('read') || lower.includes('learn')) {
+    return CATEGORY_STYLES.Study;
+  }
+  if (lower.includes('shop') || lower.includes('buy') || lower.includes('store')) {
+    return CATEGORY_STYLES.Shopping;
+  }
+
+  return CATEGORY_STYLES.General;
+};
+
+const getCategoryIcon = (catName: string): any => {
+  const style = getCategoryStyle(catName);
+  if (style && style.icon) return style.icon;
+  return Folder01Icon;
 };
 
 export const SwipeableTaskRow: React.FC<Props> = ({
@@ -125,7 +168,7 @@ export const SwipeableTaskRow: React.FC<Props> = ({
   const panResponder = useRef(
     PanResponder.create({
       onMoveShouldSetPanResponder: (_, gestureState) => {
-        return Math.abs(gestureState.dx) > 10 && Math.abs(gestureState.dy) < 15;
+        return Math.abs(gestureState.dx) > 15 && Math.abs(gestureState.dy) < 15;
       },
       onPanResponderMove: (_, gestureState) => {
         if (gestureState.dx < 0) {
@@ -135,8 +178,7 @@ export const SwipeableTaskRow: React.FC<Props> = ({
         }
       },
       onPanResponderRelease: (_, gestureState) => {
-        if (gestureState.dx < -45) {
-          // Swiped Left -> Remain open showing Delete action button
+        if (gestureState.dx < -40) {
           Animated.spring(pan, {
             toValue: { x: -80, y: 0 },
             useNativeDriver: false,
@@ -145,7 +187,6 @@ export const SwipeableTaskRow: React.FC<Props> = ({
           }).start();
           isSwipedOpen.current = true;
         } else if (gestureState.dx > 50) {
-          // Swiped Right -> Mark as complete directly without showing icon, then snap back
           onToggle(task._id);
           closeSwipe();
         } else {
@@ -156,63 +197,96 @@ export const SwipeableTaskRow: React.FC<Props> = ({
   ).current;
 
   const categoryName = task.category && task.category.trim() ? task.category : 'General';
-  const catStyle = CATEGORY_STYLES[categoryName] || CATEGORY_STYLES.General;
+  const catStyle = getCategoryStyle(categoryName);
   const titleSentenceCase = toSentenceCase(task.title);
+  const categoryIcon = getCategoryIcon(categoryName);
+
+  const isCompleted = task.completed;
+
+  // Completed tasks get a dulled dark/grey card surface with low opacity so active tasks pop in vibrant colors
+  const cardBg = isCompleted
+    ? (theme.isDark ? '#1E232B' : '#EAECEE')
+    : catStyle.bg;
+
+  const graphicColor = isCompleted
+    ? (theme.isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.06)')
+    : catStyle.graphicColor;
+
+  const textColor = isCompleted
+    ? (theme.isDark ? '#768390' : '#6E7781')
+    : catStyle.textColor;
+
+  const subtextColor = isCompleted
+    ? (theme.isDark ? '#545D68' : '#8C95A0')
+    : catStyle.subtextColor;
+
+  const checkboxBorder = isCompleted
+    ? (theme.isDark ? '#444C56' : '#8C95A0')
+    : catStyle.textColor;
+
+  const checkboxBg = isCompleted
+    ? (theme.isDark ? '#2D333B' : '#6E7781')
+    : catStyle.textColor;
+
+  const actionOpacity = pan.x.interpolate({
+    inputRange: [-80, -10, 0],
+    outputRange: [1, 0, 0],
+    extrapolate: 'clamp',
+  });
 
   return (
     <View style={styles.rowContainer}>
-      {/* Revealed Right Action (Swipe Left -> Delete) */}
-      <View style={[styles.actionContainerRight, { backgroundColor: theme.priorityHigh }]}>
+      {/* Revealed Right Action (Swipe Left -> Delete, fades in ONLY during swipe) */}
+      <Animated.View
+        style={[
+          styles.actionContainerRight,
+          {
+            backgroundColor: theme.priorityHigh,
+            opacity: actionOpacity,
+          },
+        ]}
+      >
         <TouchableOpacity style={styles.actionBtn} onPress={handleDeletePress} activeOpacity={0.8}>
-          <Icon name="trash-2" size={20} color="#FFFFFF" />
-          <Text style={[styles.actionText, { color: '#FFFFFF' }]}>Delete</Text>
+          <HugeiconsIcon icon={Delete02Icon} size={22} color="#FFFFFF" />
         </TouchableOpacity>
-      </View>
+      </Animated.View>
 
-      {/* Foreground Task Card with Category Color & Abstract Geometric Accents */}
+      {/* Foreground Main Card */}
       <Animated.View
         style={[
           styles.foregroundCard,
           {
-            backgroundColor: catStyle.bg,
+            backgroundColor: cardBg,
+            borderColor: isCompleted ? (theme.isDark ? '#2D333B' : '#D0D7DE') : 'transparent',
+            borderWidth: isCompleted ? 1 : 0,
             transform: pan.getTranslateTransform(),
           },
           shadows.sm,
         ]}
         {...panResponder.panHandlers}
       >
-        {/* Right Side Abstract Geometric Graphic Accent matching Reference Screenshots */}
-        <View style={styles.graphicClipContainer}>
-          <View
-            style={[
-              styles.geometricShape,
-              { backgroundColor: catStyle.graphicColor },
-              catStyle.shapeType === 'flower' && styles.shapeFlower,
-              catStyle.shapeType === 'arc' && styles.shapeArc,
-              catStyle.shapeType === 'polygon' && styles.shapePolygon,
-              catStyle.shapeType === 'badge' && styles.shapeBadge,
-            ]}
-          />
-        </View>
-
-        {/* Top Right Category Pill Badge */}
-        <View style={[styles.topRightBadge, { backgroundColor: catStyle.badgeBg }]}>
-          <Text style={[styles.topRightBadgeText, { color: catStyle.textColor }]}>
-            {categoryName}
-          </Text>
+        {/* Right Side Large Category Vector Icon Graphic Accent */}
+        <View style={styles.graphicIconContainer} pointerEvents="none">
+          <View style={styles.largeCategoryIcon}>
+            <HugeiconsIcon
+              icon={categoryIcon}
+              size={76}
+              color={graphicColor}
+            />
+          </View>
         </View>
 
         <TouchableOpacity
           onPress={() => onToggle(task._id)}
           style={[
             styles.checkboxCircle,
-            { borderColor: catStyle.textColor },
-            task.completed && { backgroundColor: catStyle.textColor },
+            { borderColor: checkboxBorder },
+            isCompleted && { backgroundColor: checkboxBg },
           ]}
           activeOpacity={0.7}
         >
-          {task.completed && (
-            <Icon name="check" size={13} color={catStyle.bg} />
+          {isCompleted && (
+            <HugeiconsIcon icon={Tick01Icon} size={13} color="#FFFFFF" />
           )}
         </TouchableOpacity>
 
@@ -230,16 +304,33 @@ export const SwipeableTaskRow: React.FC<Props> = ({
           <Text
             style={[
               styles.taskTitle,
-              { color: catStyle.textColor },
-              task.completed && { opacity: 0.6, textDecorationLine: 'line-through' },
+              { color: textColor },
+              isCompleted && { opacity: 0.7, textDecorationLine: 'line-through' },
             ]}
+            numberOfLines={1}
           >
             {titleSentenceCase}
           </Text>
 
+          {!!task.description && !!task.description.trim() && (
+            <Text
+              style={[
+                styles.taskDescription,
+                { color: subtextColor },
+                isCompleted && { opacity: 0.6, textDecorationLine: 'line-through' },
+              ]}
+              numberOfLines={1}
+              ellipsizeMode="tail"
+            >
+              {task.description.trim()}
+            </Text>
+          )}
+
           <View style={styles.taskMetaRow}>
-            <Icon name="clock" size={12} color={catStyle.subtextColor} style={styles.clockIcon} />
-            <Text style={[styles.taskMetaText, { color: catStyle.subtextColor }]}>
+            <View style={styles.clockIcon}>
+              <HugeiconsIcon icon={Clock01Icon} size={12} color={subtextColor} />
+            </View>
+            <Text style={[styles.taskMetaText, { color: subtextColor }]}>
               {dateLabel} · {timeLabel}
             </Text>
           </View>
@@ -256,86 +347,46 @@ const styles = StyleSheet.create({
   },
   actionContainerRight: {
     position: 'absolute',
-    right: 0,
-    top: 0,
-    bottom: 0,
-    width: 80,
-    borderRadius: 24,
+    right: 4,
+    top: 2,
+    bottom: 2,
+    width: 66,
+    borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
+    overflow: 'hidden',
   },
   actionBtn: {
     width: '100%',
     height: '100%',
     justifyContent: 'center',
     alignItems: 'center',
-    gap: 2,
-  },
-  actionText: {
-    fontFamily: fontFamilies.body,
-    fontSize: 11,
-    fontWeight: '700',
   },
   foregroundCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: spacing.lg,
+    paddingVertical: spacing.md,
     paddingHorizontal: spacing.lg,
-    borderRadius: 24, // High rounded corners matching reference screenshot
-    minHeight: 88,
+    borderRadius: 24,
+    minHeight: 84,
     position: 'relative',
     overflow: 'hidden',
   },
-  graphicClipContainer: {
+  graphicIconContainer: {
     position: 'absolute',
-    right: 0,
-    top: 0,
-    bottom: 0,
-    width: 120,
-    overflow: 'hidden',
+    right: -8,
+    bottom: -10,
+    justifyContent: 'center',
+    alignItems: 'center',
+    opacity: 0.4,
   },
-  geometricShape: {
-    position: 'absolute',
-    right: -15,
-    bottom: -15,
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-  },
-  shapeFlower: {
-    borderRadius: 35,
-    transform: [{ rotate: '45deg' }],
-  },
-  shapeArc: {
-    borderRadius: 50,
-    borderTopLeftRadius: 0,
-  },
-  shapePolygon: {
-    borderRadius: 16,
-    transform: [{ rotate: '25deg' }],
-  },
-  shapeBadge: {
-    borderRadius: 20,
-    opacity: 0.8,
-  },
-  topRightBadge: {
-    position: 'absolute',
-    top: 12,
-    right: 14,
-    paddingHorizontal: 10,
-    paddingVertical: 3,
-    borderRadius: radius.pill,
-    zIndex: 10,
-  },
-  topRightBadgeText: {
-    fontFamily: fontFamilies.body,
-    fontSize: 11,
-    fontWeight: '600',
+  largeCategoryIcon: {
+    transform: [{ rotate: '-10deg' }],
   },
   checkboxCircle: {
     width: 24,
     height: 24,
-    borderRadius: 12, // Perfect circle matching reference image
+    borderRadius: 12,
     borderWidth: 1.5,
     marginRight: spacing.md,
     justifyContent: 'center',
@@ -344,14 +395,19 @@ const styles = StyleSheet.create({
   },
   taskBody: {
     flex: 1,
-    paddingRight: 60, // Space for right graphic accent
+    paddingRight: 50,
     zIndex: 10,
   },
   taskTitle: {
     fontFamily: fontFamilies.headingBold,
     fontSize: 16,
-    fontWeight: '700',
+    marginBottom: 2,
+  },
+  taskDescription: {
+    fontFamily: fontFamilies.body,
+    fontSize: 13,
     marginBottom: 4,
+    opacity: 0.85,
   },
   taskMetaRow: {
     flexDirection: 'row',
@@ -363,6 +419,5 @@ const styles = StyleSheet.create({
   taskMetaText: {
     fontFamily: fontFamilies.body,
     fontSize: 12,
-    fontWeight: '500',
   },
 });

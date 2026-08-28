@@ -11,6 +11,8 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
+import { HugeiconsIcon } from '@hugeicons/react-native';
+import { ArrowLeft01Icon } from '@hugeicons/core-free-icons';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../theme/ThemeContext';
 import { updateProfileRequest } from '../api/authApi';
@@ -82,8 +84,8 @@ export const EditProfileScreen: React.FC<{ navigation: any }> = ({ navigation })
     <SafeAreaView style={[styles.flex, { backgroundColor: theme.background }]}>
       {/* Top Header */}
       <View style={[styles.header, { borderBottomColor: theme.border }]}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-          <Text style={[styles.backText, { color: theme.textSecondary }]}>← Back</Text>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn} activeOpacity={0.7}>
+          <HugeiconsIcon icon={ArrowLeft01Icon} size={20} color={theme.textPrimary} />
         </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: theme.textPrimary }]}>Edit Profile</Text>
         <View style={styles.headerSpacer} />
@@ -241,19 +243,17 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
   },
   backBtn: {
-    paddingVertical: spacing.xs,
-  },
-  backText: {
-    fontFamily: fontFamilies.body,
-    fontSize: 14,
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'flex-start',
   },
   headerTitle: {
     fontFamily: fontFamilies.headingBold,
     fontSize: 18,
-    fontWeight: '600',
   },
   headerSpacer: {
-    width: 48,
+    width: 40,
   },
   container: {
     padding: spacing.containerPadding,
@@ -274,14 +274,12 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   avatarText: {
-    fontFamily: fontFamilies.body,
+    fontFamily: fontFamilies.headingBold,
     fontSize: 24,
-    fontWeight: '700',
   },
   heroName: {
     fontFamily: fontFamilies.headingBold,
     fontSize: 20,
-    fontWeight: '600',
     marginBottom: 2,
   },
   heroEmail: {
@@ -297,7 +295,6 @@ const styles = StyleSheet.create({
   statusBadgeText: {
     fontFamily: fontFamilies.body,
     fontSize: 11,
-    fontWeight: '500',
   },
   sectionHeaderBox: {
     marginBottom: spacing.xs,
@@ -306,7 +303,6 @@ const styles = StyleSheet.create({
     fontFamily: fontFamilies.body,
     fontSize: 11,
     letterSpacing: 0.8,
-    fontWeight: '500',
   },
   detailsCard: {
     borderRadius: radius.xl, // 32px curved radius
@@ -332,7 +328,6 @@ const styles = StyleSheet.create({
   fieldValue: {
     fontFamily: fontFamilies.body,
     fontSize: 15,
-    fontWeight: '500',
   },
   input: {
     fontFamily: fontFamilies.body,
@@ -351,7 +346,6 @@ const styles = StyleSheet.create({
   editBtnText: {
     fontFamily: fontFamilies.body,
     fontSize: 12,
-    fontWeight: '500',
   },
   divider: {
     height: 1,
@@ -363,9 +357,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   saveBtnText: {
-    fontFamily: fontFamilies.body,
+    fontFamily: fontFamilies.headingBold,
     fontSize: 14,
-    fontWeight: '600',
   },
   errorBox: {
     borderRadius: radius.sm,

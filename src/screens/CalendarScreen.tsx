@@ -7,7 +7,12 @@ import {
   ScrollView,
   TouchableOpacity,
 } from 'react-native';
-import Icon from 'react-native-vector-icons/Feather';
+import { HugeiconsIcon } from '@hugeicons/react-native';
+import {
+  ArrowLeft01Icon,
+  ArrowRight01Icon,
+  Tick01Icon,
+} from '@hugeicons/core-free-icons';
 import { useAuth } from '../context/AuthContext';
 import { useTasks } from '../context/TaskContext';
 import { useTheme } from '../theme/ThemeContext';
@@ -17,6 +22,7 @@ export const CalendarScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
   const { user } = useAuth();
   const { tasks, toggleTask } = useTasks();
   const { theme } = useTheme();
+
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
 
@@ -49,29 +55,24 @@ export const CalendarScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
     const startDate = new Date(firstDay);
     startDate.setDate(firstDay.getDate() - adjustedStart);
 
-    const matrix: { dateObj: Date; dayNum: number; isCurrentMonth: boolean; taskCount: number }[] = [];
+    const days: { dateObj: Date; dayNum: number; isCurrentMonth: boolean; taskCount: number }[] = [];
+
     for (let i = 0; i < 35; i++) {
       const d = new Date(startDate);
       d.setDate(startDate.getDate() + i);
 
-      const dayTasks = tasks.filter((t) => {
-        const td = new Date(t.dateTime);
-        return (
-          td.getFullYear() === d.getFullYear() &&
-          td.getMonth() === d.getMonth() &&
-          td.getDate() === d.getDate()
-        );
-      });
+      const dStr = d.toDateString();
+      const count = tasks.filter((t) => new Date(t.dateTime).toDateString() === dStr).length;
 
-      matrix.push({
+      days.push({
         dateObj: d,
         dayNum: d.getDate(),
         isCurrentMonth: d.getMonth() === month,
-        taskCount: dayTasks.length,
+        taskCount: count,
       });
     }
 
-    return matrix;
+    return days;
   }, [currentMonth, tasks]);
 
   const selectedDayTasks = useMemo(() => {
@@ -130,14 +131,14 @@ export const CalendarScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
                 style={[styles.navBtn, { backgroundColor: theme.surfaceSecondary, borderColor: theme.border }]}
                 activeOpacity={0.7}
               >
-                <Icon name="chevron-left" size={16} color={theme.textPrimary} />
+                <HugeiconsIcon icon={ArrowLeft01Icon} size={16} color={theme.textPrimary} />
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={nextMonth}
                 style={[styles.navBtn, { backgroundColor: theme.surfaceSecondary, borderColor: theme.border }]}
                 activeOpacity={0.7}
               >
-                <Icon name="chevron-right" size={16} color={theme.textPrimary} />
+                <HugeiconsIcon icon={ArrowRight01Icon} size={16} color={theme.textPrimary} />
               </TouchableOpacity>
             </View>
           </View>
@@ -154,8 +155,7 @@ export const CalendarScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
           {/* Days Grid */}
           <View style={styles.gridContainer}>
             {calendarDays.map((cell, idx) => {
-              const isSelected =
-                cell.dateObj.toDateString() === selectedDate.toDateString();
+              const isSelected = cell.dateObj.toDateString() === selectedDate.toDateString();
 
               return (
                 <TouchableOpacity
@@ -172,7 +172,7 @@ export const CalendarScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
                     style={[
                       styles.dayCellText,
                       { color: theme.textPrimary },
-                      isSelected && { color: theme.primaryButtonText, fontWeight: '700' },
+                      isSelected && { color: theme.primaryButtonText, fontFamily: fontFamilies.headingBold },
                       !cell.isCurrentMonth && { color: theme.textMuted },
                     ]}
                   >
@@ -218,12 +218,12 @@ export const CalendarScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
                     onPress={() => toggleTask(t._id)}
                     style={[
                       styles.checkbox,
-                      { borderColor: t.completed ? theme.statusCompleted : theme.borderStrong },
+                      { borderColor: t.completed ? theme.statusCompleted : theme.textMuted },
                       t.completed && { backgroundColor: theme.statusCompleted, borderColor: theme.statusCompleted },
                     ]}
                     activeOpacity={0.7}
                   >
-                    {t.completed && <Text style={styles.checkmark}>✓</Text>}
+                    {t.completed && <HugeiconsIcon icon={Tick01Icon} size={13} color={theme.surface} />}
                   </TouchableOpacity>
 
                   <View style={styles.taskContent}>
@@ -270,7 +270,6 @@ const styles = StyleSheet.create({
   pageTitle: {
     fontFamily: fontFamilies.headingBold,
     fontSize: 26,
-    fontWeight: '700',
   },
   pageSub: {
     fontFamily: fontFamilies.body,
@@ -287,9 +286,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   profileAvatarText: {
-    fontFamily: fontFamilies.body,
+    fontFamily: fontFamilies.headingBold,
     fontSize: 16,
-    fontWeight: '700',
   },
   calendarCard: {
     borderRadius: radius.xl, // 32px curved radius
@@ -306,7 +304,6 @@ const styles = StyleSheet.create({
   monthTitle: {
     fontFamily: fontFamilies.headingBold,
     fontSize: 18,
-    fontWeight: '600',
   },
   monthNavBtns: {
     flexDirection: 'row',
@@ -330,7 +327,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontFamily: fontFamilies.body,
     fontSize: 11,
-    fontWeight: '600',
   },
   gridContainer: {
     flexDirection: 'row',
@@ -371,7 +367,6 @@ const styles = StyleSheet.create({
   selectedDayTitle: {
     fontFamily: fontFamilies.headingBold,
     fontSize: 16,
-    fontWeight: '600',
     marginBottom: spacing.md,
   },
   emptyBox: {
@@ -389,18 +384,13 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
   },
   checkbox: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    borderWidth: 1.2,
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    borderWidth: 2,
     marginRight: spacing.md,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  checkmark: {
-    fontSize: 11,
-    fontWeight: '800',
-    color: '#000000',
   },
   taskContent: {
     flex: 1,
@@ -408,7 +398,6 @@ const styles = StyleSheet.create({
   taskTitle: {
     fontFamily: fontFamilies.body,
     fontSize: 14,
-    fontWeight: '500',
   },
   taskTime: {
     fontFamily: fontFamilies.body,

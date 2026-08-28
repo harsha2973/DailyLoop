@@ -8,7 +8,13 @@ import {
   TouchableOpacity,
   Share,
 } from 'react-native';
-import Icon from 'react-native-vector-icons/Feather';
+import { HugeiconsIcon } from '@hugeicons/react-native';
+import {
+  ArrowLeft01Icon,
+  ArrowRight01Icon,
+  Tick01Icon,
+  InformationCircleIcon,
+} from '@hugeicons/core-free-icons';
 import { useAuth } from '../context/AuthContext';
 import { useTasks } from '../context/TaskContext';
 import { useTheme } from '../theme/ThemeContext';
@@ -155,23 +161,11 @@ export const InsightsScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
     year: 'numeric',
   });
 
-  const handleBackPress = () => {
-    if (navigation) {
-      if (navigation.canGoBack && navigation.canGoBack()) {
-        navigation.goBack();
-      } else {
-        navigation.navigate('Main');
-      }
-    }
-  };
-
   return (
     <SafeAreaView style={[styles.flex, { backgroundColor: theme.background }]}>
-      {/* Top Header Bar Matching Reference Screenshot */}
+      {/* Top Header Bar */}
       <View style={[styles.topHeaderBar, { borderBottomColor: theme.border }]}>
-        <TouchableOpacity onPress={handleBackPress} style={styles.headerBackBtn}>
-          <Icon name="chevron-left" size={24} color={theme.textPrimary} />
-        </TouchableOpacity>
+        <View style={styles.headerSpacer} />
         <Text style={[styles.headerTitle, { color: theme.textPrimary }]}>Report</Text>
         <TouchableOpacity onPress={handleShare} style={styles.headerShareBtn}>
           <Text style={[styles.headerShareText, { color: theme.textSecondary }]}>Share</Text>
@@ -225,11 +219,11 @@ export const InsightsScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
         {/* Date Range Step Navigator */}
         <View style={styles.dateStepNav}>
           <TouchableOpacity onPress={handlePrevRange} style={styles.stepArrowBtn}>
-            <Icon name="chevron-left" size={20} color={theme.textMuted} />
+            <HugeiconsIcon icon={ArrowLeft01Icon} size={20} color={theme.textMuted} />
           </TouchableOpacity>
           <Text style={[styles.dateStepLabel, { color: theme.textPrimary }]}>{monthYearLabel}</Text>
           <TouchableOpacity onPress={handleNextRange} style={styles.stepArrowBtn}>
-            <Icon name="chevron-right" size={20} color={theme.textMuted} />
+            <HugeiconsIcon icon={ArrowRight01Icon} size={20} color={theme.textMuted} />
           </TouchableOpacity>
         </View>
 
@@ -239,7 +233,9 @@ export const InsightsScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
             <Text style={[styles.chartTitleText, { color: theme.textSecondary }]}>
               {viewMode === 'weekly' ? 'Weekly Completion Rate' : 'Monthly Completion Rate'}
             </Text>
-            <Icon name="info" size={13} color={theme.textMuted} style={styles.infoIcon} />
+            <View style={styles.infoIcon}>
+              <HugeiconsIcon icon={InformationCircleIcon} size={13} color={theme.textMuted} />
+            </View>
           </View>
 
           <Text style={[styles.chartMetricValue, { color: theme.textPrimary }]}>
@@ -350,11 +346,11 @@ export const InsightsScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
                   <View
                     style={[
                       styles.detailTaskCheck,
-                      { borderColor: t.completed ? theme.statusCompleted : theme.borderStrong },
-                      t.completed && { backgroundColor: theme.statusCompleted },
+                      { borderColor: t.completed ? theme.statusCompleted : theme.textMuted },
+                      t.completed && { backgroundColor: theme.statusCompleted, borderColor: theme.statusCompleted },
                     ]}
                   >
-                    {t.completed && <Icon name="check" size={11} color="#000000" />}
+                    {t.completed && <HugeiconsIcon icon={Tick01Icon} size={13} color={theme.surface} />}
                   </View>
                   <Text
                     style={[
@@ -385,13 +381,12 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
     borderBottomWidth: 1,
   },
-  headerBackBtn: {
-    padding: spacing.xs,
+  headerSpacer: {
+    width: 48,
   },
   headerTitle: {
     fontFamily: fontFamilies.headingBold,
     fontSize: 18,
-    fontWeight: '600',
   },
   headerShareBtn: {
     padding: spacing.xs,
@@ -399,7 +394,6 @@ const styles = StyleSheet.create({
   headerShareText: {
     fontFamily: fontFamilies.body,
     fontSize: 14,
-    fontWeight: '500',
   },
   container: {
     paddingHorizontal: spacing.containerPadding,
@@ -422,10 +416,9 @@ const styles = StyleSheet.create({
   modePillText: {
     fontFamily: fontFamilies.body,
     fontSize: 13,
-    fontWeight: '500',
   },
   modePillTextActive: {
-    fontWeight: '700',
+    fontFamily: fontFamilies.headingBold,
   },
   dateStepNav: {
     flexDirection: 'row',
@@ -440,7 +433,6 @@ const styles = StyleSheet.create({
   dateStepLabel: {
     fontFamily: fontFamilies.headingBold,
     fontSize: 15,
-    fontWeight: '600',
   },
   chartCard: {
     borderRadius: radius.xl, // 32px curved card
@@ -456,7 +448,6 @@ const styles = StyleSheet.create({
   chartTitleText: {
     fontFamily: fontFamilies.body,
     fontSize: 13,
-    fontWeight: '500',
   },
   infoIcon: {
     marginLeft: 4,
@@ -464,7 +455,6 @@ const styles = StyleSheet.create({
   chartMetricValue: {
     fontFamily: fontFamilies.headingBold,
     fontSize: 36,
-    fontWeight: '800',
     marginBottom: spacing.lg,
   },
   capsuleBarsRow: {
@@ -494,11 +484,10 @@ const styles = StyleSheet.create({
   capsuleDayLabel: {
     fontFamily: fontFamilies.body,
     fontSize: 11,
-    fontWeight: '500',
     marginTop: 6,
   },
   capsuleDayLabelActive: {
-    fontWeight: '700',
+    fontFamily: fontFamilies.headingBold,
   },
   monthlyGridContainer: {
     marginBottom: spacing.md,
@@ -553,7 +542,6 @@ const styles = StyleSheet.create({
   detailsTitle: {
     fontFamily: fontFamilies.headingBold,
     fontSize: 16,
-    fontWeight: '600',
     marginBottom: spacing.md,
   },
   noTasksText: {
@@ -570,10 +558,10 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
   },
   detailTaskCheck: {
-    width: 18,
-    height: 18,
-    borderRadius: 9,
-    borderWidth: 1.2,
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    borderWidth: 2,
     marginRight: spacing.sm,
     justifyContent: 'center',
     alignItems: 'center',

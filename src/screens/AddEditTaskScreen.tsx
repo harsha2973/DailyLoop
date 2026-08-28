@@ -57,10 +57,10 @@ export const AddEditTaskScreen: React.FC<{ navigation: any; route: any }> = ({
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const priorities: { id: Priority; label: string; bg: string; text: string }[] = [
-    { id: 'high', label: 'High', bg: theme.priorityHighBg, text: theme.priorityHighText },
-    { id: 'medium', label: 'Medium', bg: theme.priorityMediumBg, text: theme.priorityMediumText },
-    { id: 'low', label: 'Low', bg: theme.priorityLowBg, text: theme.priorityLowText },
+  const priorities: { id: Priority; label: string; solidBg: string; color: string }[] = [
+    { id: 'high', label: 'High', solidBg: theme.priorityHigh, color: theme.priorityHigh },
+    { id: 'medium', label: 'Medium', solidBg: theme.priorityMedium, color: theme.priorityMedium },
+    { id: 'low', label: 'Low', solidBg: theme.priorityLow, color: theme.priorityLow },
   ];
 
   const handleOpenPicker = (target: 'dateTime' | 'deadline', mode: 'date' | 'time') => {
@@ -142,7 +142,7 @@ export const AddEditTaskScreen: React.FC<{ navigation: any; route: any }> = ({
           {/* Card 1: Task Details (Title & Description) */}
           <View style={[styles.sectionCard, { backgroundColor: theme.surface, borderColor: theme.border }, shadows.md]}>
             <View style={styles.fieldGroup}>
-              <Text style={[styles.fieldLabel, { color: theme.textMuted }]}>TASK TITLE</Text>
+              <Text style={[styles.fieldLabel, { color: theme.textSecondary }]}>TASK TITLE</Text>
               <View style={[styles.inputContainer, { backgroundColor: theme.surfaceSecondary, borderColor: theme.border }]}>
                 <TextInput
                   style={[styles.titleInput, { color: theme.textPrimary }]}
@@ -156,7 +156,7 @@ export const AddEditTaskScreen: React.FC<{ navigation: any; route: any }> = ({
             </View>
 
             <View style={styles.fieldGroupLast}>
-              <Text style={[styles.fieldLabel, { color: theme.textMuted }]}>DESCRIPTION (OPTIONAL)</Text>
+              <Text style={[styles.fieldLabel, { color: theme.textSecondary }]}>DESCRIPTION (OPTIONAL)</Text>
               <View style={[styles.textAreaContainer, { backgroundColor: theme.surfaceSecondary, borderColor: theme.border }]}>
                 <TextInput
                   style={[styles.textAreaInput, { color: theme.textPrimary }]}
@@ -174,7 +174,7 @@ export const AddEditTaskScreen: React.FC<{ navigation: any; route: any }> = ({
           {/* Card 2: Organization (Time of Day & Category) */}
           <View style={[styles.sectionCard, { backgroundColor: theme.surface, borderColor: theme.border }, shadows.md]}>
             <View style={styles.fieldGroup}>
-              <Text style={[styles.fieldLabel, { color: theme.textMuted }]}>TIME OF DAY</Text>
+              <Text style={[styles.fieldLabel, { color: theme.textSecondary }]}>TIME OF DAY</Text>
               <View style={styles.chipRow}>
                 {TIME_OF_DAY_OPTIONS.map((item) => {
                   const active = timeOfDay === item.id;
@@ -190,8 +190,9 @@ export const AddEditTaskScreen: React.FC<{ navigation: any; route: any }> = ({
                           borderColor: active ? theme.primaryButton : theme.border,
                         },
                       ]}
+                      activeOpacity={0.8}
                     >
-                      <Text style={[styles.chipPillText, { color: active ? theme.primaryButtonText : theme.textSecondary }]}>
+                      <Text style={[styles.chipPillText, { color: active ? theme.primaryButtonText : theme.textPrimary }]}>
                         {item.label}
                       </Text>
                     </TouchableOpacity>
@@ -201,7 +202,7 @@ export const AddEditTaskScreen: React.FC<{ navigation: any; route: any }> = ({
             </View>
 
             <View style={styles.fieldGroupLast}>
-              <Text style={[styles.fieldLabel, { color: theme.textMuted }]}>CATEGORY</Text>
+              <Text style={[styles.fieldLabel, { color: theme.textSecondary }]}>CATEGORY</Text>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categoryScroll}>
                 {CATEGORIES.map((cat) => {
                   const active = category === cat;
@@ -217,8 +218,9 @@ export const AddEditTaskScreen: React.FC<{ navigation: any; route: any }> = ({
                           borderColor: active ? theme.primaryButton : theme.border,
                         },
                       ]}
+                      activeOpacity={0.8}
                     >
-                      <Text style={[styles.chipPillText, { color: active ? theme.primaryButtonText : theme.textSecondary }]}>
+                      <Text style={[styles.chipPillText, { color: active ? theme.primaryButtonText : theme.textPrimary }]}>
                         {cat}
                       </Text>
                     </TouchableOpacity>
@@ -231,7 +233,7 @@ export const AddEditTaskScreen: React.FC<{ navigation: any; route: any }> = ({
           {/* Card 3: Priority */}
           <View style={[styles.sectionCard, { backgroundColor: theme.surface, borderColor: theme.border }, shadows.md]}>
             <View style={styles.fieldGroupLast}>
-              <Text style={[styles.fieldLabel, { color: theme.textMuted }]}>PRIORITY</Text>
+              <Text style={[styles.fieldLabel, { color: theme.textSecondary }]}>PRIORITY</Text>
               <View style={styles.priorityRow}>
                 {priorities.map((p) => {
                   const active = priority === p.id;
@@ -242,12 +244,21 @@ export const AddEditTaskScreen: React.FC<{ navigation: any; route: any }> = ({
                       onPress={() => setPriority(p.id)}
                       style={[
                         styles.priorityBtn,
-                        { backgroundColor: active ? p.bg : theme.surfaceSecondary, borderColor: theme.border },
-                        active && { borderColor: p.text },
+                        {
+                          backgroundColor: active ? p.solidBg : theme.surfaceSecondary,
+                          borderColor: active ? p.solidBg : theme.border,
+                        },
                       ]}
+                      activeOpacity={0.8}
                     >
-                      <Text style={[styles.priorityBtnText, { color: active ? p.text : theme.textSecondary }]}>
-                        ● {p.label}
+                      <Text
+                        style={[
+                          styles.priorityBtnText,
+                          { color: active ? '#FFFFFF' : theme.textPrimary },
+                        ]}
+                      >
+                        <Text style={{ color: active ? '#FFFFFF' : p.color }}>● </Text>
+                        {p.label}
                       </Text>
                     </TouchableOpacity>
                   );
@@ -259,7 +270,7 @@ export const AddEditTaskScreen: React.FC<{ navigation: any; route: any }> = ({
           {/* Card 4: Schedule & Deadline */}
           <View style={[styles.sectionCard, { backgroundColor: theme.surface, borderColor: theme.border }, shadows.md]}>
             <View style={styles.fieldGroupLast}>
-              <Text style={[styles.fieldLabel, { color: theme.textMuted }]}>SCHEDULE AND DEADLINE</Text>
+              <Text style={[styles.fieldLabel, { color: theme.textSecondary }]}>SCHEDULE AND DEADLINE</Text>
               <View style={[styles.timingCard, { backgroundColor: theme.surfaceSecondary, borderColor: theme.border }]}>
                 {/* Scheduled Row */}
                 <View style={styles.timingRow}>
@@ -268,6 +279,7 @@ export const AddEditTaskScreen: React.FC<{ navigation: any; route: any }> = ({
                     <TouchableOpacity
                       style={[styles.pickerPill, { backgroundColor: theme.surface, borderColor: theme.border }]}
                       onPress={() => handleOpenPicker('dateTime', 'date')}
+                      activeOpacity={0.8}
                     >
                       <Text style={[styles.pickerPillText, { color: theme.textPrimary }]}>
                         {dateTime.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
@@ -277,6 +289,7 @@ export const AddEditTaskScreen: React.FC<{ navigation: any; route: any }> = ({
                     <TouchableOpacity
                       style={[styles.pickerPill, { backgroundColor: theme.surface, borderColor: theme.border }]}
                       onPress={() => handleOpenPicker('dateTime', 'time')}
+                      activeOpacity={0.8}
                     >
                       <Text style={[styles.pickerPillText, { color: theme.textPrimary }]}>
                         {dateTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -294,6 +307,7 @@ export const AddEditTaskScreen: React.FC<{ navigation: any; route: any }> = ({
                     <TouchableOpacity
                       style={[styles.pickerPill, { backgroundColor: theme.surface, borderColor: theme.border }]}
                       onPress={() => handleOpenPicker('deadline', 'date')}
+                      activeOpacity={0.8}
                     >
                       <Text style={[styles.pickerPillText, { color: theme.textPrimary }]}>
                         {deadline.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
@@ -303,6 +317,7 @@ export const AddEditTaskScreen: React.FC<{ navigation: any; route: any }> = ({
                     <TouchableOpacity
                       style={[styles.pickerPill, { backgroundColor: theme.surface, borderColor: theme.border }]}
                       onPress={() => handleOpenPicker('deadline', 'time')}
+                      activeOpacity={0.8}
                     >
                       <Text style={[styles.pickerPillText, { color: theme.textPrimary }]}>
                         {deadline.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -368,7 +383,6 @@ const styles = StyleSheet.create({
   screenTitle: {
     fontFamily: fontFamilies.headingBold,
     fontSize: 18,
-    fontWeight: '600',
   },
   headerSpacer: {
     width: 48,
@@ -376,7 +390,7 @@ const styles = StyleSheet.create({
   container: {
     paddingHorizontal: spacing.containerPadding,
     paddingTop: spacing.lg,
-    paddingBottom: 110, // Generous padding so content scrolls behind floating button
+    paddingBottom: 140, // Increased bottom padding so floating Create Task button never overlaps content
     gap: spacing.lg,
   },
   sectionCard: {
@@ -392,10 +406,9 @@ const styles = StyleSheet.create({
   },
   fieldLabel: {
     fontFamily: fontFamilies.body,
-    fontSize: 11,
-    marginBottom: spacing.xs + 2,
-    letterSpacing: 0.5,
-    fontWeight: '500',
+    fontSize: 12,
+    marginBottom: 8,
+    letterSpacing: 0.6,
   },
   inputContainer: {
     borderRadius: radius.lg,
@@ -426,18 +439,18 @@ const styles = StyleSheet.create({
   },
   chipRow: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: spacing.sm,
   },
   chipPill: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 9,
     borderRadius: radius.pill,
     borderWidth: 1,
   },
   chipPillText: {
-    fontFamily: fontFamilies.body,
-    fontSize: 12,
-    fontWeight: '600',
+    fontFamily: fontFamilies.headingBold,
+    fontSize: 13,
   },
   categoryScroll: {
     gap: spacing.sm,
@@ -448,15 +461,15 @@ const styles = StyleSheet.create({
   },
   priorityBtn: {
     flex: 1,
-    paddingVertical: 9,
+    paddingVertical: 10,
     borderRadius: radius.pill,
     borderWidth: 1,
     alignItems: 'center',
+    justifyContent: 'center',
   },
   priorityBtnText: {
-    fontFamily: fontFamilies.body,
-    fontSize: 12,
-    fontWeight: '600',
+    fontFamily: fontFamilies.headingBold,
+    fontSize: 13,
   },
   timingCard: {
     borderRadius: radius.lg,
@@ -469,7 +482,7 @@ const styles = StyleSheet.create({
     padding: spacing.md,
   },
   timingLabel: {
-    fontFamily: fontFamilies.body,
+    fontFamily: fontFamilies.headingBold,
     fontSize: 14,
   },
   pickerPillsRow: {
@@ -477,15 +490,14 @@ const styles = StyleSheet.create({
     gap: spacing.xs + 2,
   },
   pickerPill: {
-    paddingHorizontal: 10,
-    paddingVertical: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
     borderRadius: radius.pill,
     borderWidth: 1,
   },
   pickerPillText: {
-    fontFamily: fontFamilies.body,
-    fontSize: 12,
-    fontWeight: '500',
+    fontFamily: fontFamilies.headingBold,
+    fontSize: 13,
   },
   timingDivider: {
     height: 1,
@@ -510,8 +522,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   createTaskButtonText: {
-    fontFamily: fontFamilies.body,
+    fontFamily: fontFamilies.headingBold,
     fontSize: 15,
-    fontWeight: '600',
   },
 });

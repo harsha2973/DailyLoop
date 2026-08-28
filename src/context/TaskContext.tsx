@@ -17,6 +17,7 @@ import {
   deleteTaskRequest,
 } from '../api/taskApi';
 import { sortTasks } from '../utils/sortTasks';
+import { NotificationService } from '../services/NotificationService';
 
 const PRIORITY_KEY = '@dailyloop_default_priority';
 const SORTING_KEY = '@dailyloop_default_sorting';
@@ -161,6 +162,20 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({
     const task = await toggleTaskComplete(id);
     dispatch({ type: 'UPSERT_TASK', payload: task });
   }, []);
+
+  // Initialize NotificationService monitoring & register completion listener
+  useEffect(() => {
+    NotificationService.startMonitoring(() => state.tasks);
+
+    const unsubscribe = NotificationService.registerTaskCompletionListener((taskId) => {
+      toggleComplete(taskId).catch(() => {});
+    });
+
+    return () => {
+      unsubscribe();
+      NotificationService.stopMonitoring();
+    };
+  }, [state.tasks, toggleComplete]);
 
   const removeTask = useCallback(async (id: string) => {
     await deleteTaskRequest(id);

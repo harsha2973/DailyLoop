@@ -15,6 +15,7 @@ import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../theme/ThemeContext';
 import { radius, spacing, fontFamilies, shadows } from '../theme/colors';
 import { AuthDialogModal } from '../components/AuthDialogModal';
+import { AppLogo } from '../components/AppLogo';
 
 export const LoginScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const { login } = useAuth();
@@ -110,9 +111,14 @@ export const LoginScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
         <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
           {/* Header */}
           <View style={styles.header}>
-            <View style={[styles.logoBadge, { backgroundColor: theme.primaryButton }, shadows.sm]}>
-              <Text style={[styles.logoMark, { color: theme.primaryButtonText }]}>∞</Text>
-            </View>
+            <AppLogo
+              size={32}
+              containerSize={56}
+              backgroundColor={theme.primaryButton}
+              color={theme.primaryButtonText}
+              borderRadius={radius.sm}
+              containerStyle={shadows.sm}
+            />
             <Text style={[styles.title, { color: theme.textPrimary }]}>Sign in to DailyLoop</Text>
             <Text style={[styles.subtitle, { color: theme.textSecondary }]}>
               Plan less. Do more.
@@ -240,12 +246,10 @@ const styles = StyleSheet.create({
   logoMark: {
     fontFamily: fontFamilies.headingBold,
     fontSize: 26,
-    fontWeight: '700',
   },
   title: {
     fontFamily: fontFamilies.headingBold,
     fontSize: 26,
-    fontWeight: '700',
     textAlign: 'center',
   },
   subtitle: {
@@ -280,7 +284,6 @@ const styles = StyleSheet.create({
   signupButtonText: {
     fontFamily: fontFamilies.body,
     fontSize: 11,
-    fontWeight: '600',
   },
   fieldGroup: {
     marginBottom: spacing.md,
@@ -290,7 +293,6 @@ const styles = StyleSheet.create({
     fontSize: 11,
     marginBottom: spacing.xs,
     letterSpacing: 0.5,
-    fontWeight: '500',
   },
   inputContainer: {
     flexDirection: 'row',
@@ -322,9 +324,8 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   primaryButtonText: {
-    fontFamily: fontFamilies.body,
+    fontFamily: fontFamilies.headingBold,
     fontSize: 15,
-    fontWeight: '600',
   },
   registerLink: {
     alignItems: 'center',
@@ -335,6 +336,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
   },
   registerBold: {
-    fontWeight: '600',
+    fontFamily: fontFamilies.headingBold,
   },
 });

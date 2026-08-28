@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { StyleSheet, Text, View, ActivityIndicator } from 'react-native';
 import { colors, radius, spacing, typography } from '../theme/colors';
+import { AppLogo } from '../components/AppLogo';
 
 export const SplashScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   useEffect(() => {
@@ -12,9 +13,14 @@ export const SplashScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.logoBox}>
-        <Text style={styles.logoMark}>∞</Text>
-      </View>
+      <AppLogo
+        size={38}
+        containerSize={68}
+        backgroundColor={colors.primary}
+        color={colors.onPrimary}
+        borderRadius={radius.sm}
+        containerStyle={{ marginBottom: spacing.md }}
+      />
       <Text style={styles.appName}>DailyLoop</Text>
       <Text style={styles.tagline}>Plan less. Do more.</Text>
       <ActivityIndicator size="small" color={colors.textSecondary} style={styles.loader} />

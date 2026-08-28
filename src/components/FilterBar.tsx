@@ -9,7 +9,12 @@ import {
   UIManager,
   View,
 } from 'react-native';
-import Icon from 'react-native-vector-icons/Feather';
+import { HugeiconsIcon } from '@hugeicons/react-native';
+import {
+  CircleIcon,
+  CheckmarkCircle01Icon,
+  ListIcon,
+} from '@hugeicons/core-free-icons';
 import { useTheme } from '../theme/ThemeContext';
 import { radius, spacing, shadows, fontFamilies } from '../theme/colors';
 import { FilterMode, SortMode } from '../types';
@@ -25,14 +30,14 @@ interface Props {
   onSortChange: (mode: SortMode) => void;
 }
 
-const FILTERS: { key: FilterMode; label: string; icon: string }[] = [
-  { key: 'active', label: 'To do', icon: 'disc' },
-  { key: 'completed', label: 'Completed', icon: 'check-circle' },
-  { key: 'all', label: 'All Tasks', icon: 'list' },
+const FILTERS: { key: FilterMode; label: string; icon: any }[] = [
+  { key: 'active', label: 'To do', icon: CircleIcon },
+  { key: 'completed', label: 'Completed', icon: CheckmarkCircle01Icon },
+  { key: 'all', label: 'All Tasks', icon: ListIcon },
 ];
 
 const AnimatedFilterItem: React.FC<{
-  filter: { key: FilterMode; label: string; icon: string };
+  filter: { key: FilterMode; label: string; icon: any };
   active: boolean;
   onPress: () => void;
   theme: any;
@@ -69,12 +74,13 @@ const AnimatedFilterItem: React.FC<{
           active && shadows.sm,
         ]}
       >
-        <Icon
-          name={filter.icon}
-          size={14}
-          color={active ? theme.primaryButtonText : theme.textSecondary}
-          style={styles.pillIcon}
-        />
+        <View style={styles.pillIcon}>
+          <HugeiconsIcon
+            icon={filter.icon}
+            size={14}
+            color={active ? theme.primaryButtonText : theme.textSecondary}
+          />
+        </View>
         <Text
           style={[
             styles.pillText,
@@ -150,9 +156,8 @@ const styles = StyleSheet.create({
   pillText: {
     fontFamily: fontFamilies.body,
     fontSize: 13,
-    fontWeight: '500',
   },
   pillTextActive: {
-    fontWeight: '700',
+    fontFamily: fontFamilies.headingBold,
   },
 });

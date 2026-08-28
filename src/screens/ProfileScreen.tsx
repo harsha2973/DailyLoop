@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   StyleSheet,
   Text,
@@ -9,12 +9,18 @@ import {
   Switch,
   Alert,
 } from 'react-native';
-import Icon from 'react-native-vector-icons/Feather';
+import { HugeiconsIcon } from '@hugeicons/react-native';
+import {
+  ArrowLeft01Icon,
+  Tick01Icon,
+  Logout01Icon,
+} from '@hugeicons/core-free-icons';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../theme/ThemeContext';
 import { useTasks } from '../context/TaskContext';
 import { radius, spacing, fontFamilies, shadows } from '../theme/colors';
 import { Priority, SortMode } from '../types';
+import { NotificationService } from '../services/NotificationService';
 
 export const ProfileScreen: React.FC<{ navigation?: any }> = ({ navigation }) => {
   const { user, logout } = useAuth();
@@ -22,6 +28,19 @@ export const ProfileScreen: React.FC<{ navigation?: any }> = ({ navigation }) =>
   const { defaultPriority, defaultSorting, setDefaultPriority, setDefaultSorting } = useTasks();
 
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+
+  useEffect(() => {
+    NotificationService.isEnabled()
+      .then((val) => setNotificationsEnabled(val))
+      .catch(() => {});
+  }, []);
+
+  const handleToggleNotifications = async (val: boolean) => {
+    setNotificationsEnabled(val);
+    try {
+      await NotificationService.setEnabled(val);
+    } catch {}
+  };
 
   const handleBackPress = () => {
     if (navigation) {
@@ -91,8 +110,7 @@ export const ProfileScreen: React.FC<{ navigation?: any }> = ({ navigation }) =>
       {/* Top Back Navigation Bar */}
       <View style={[styles.topNavHeader, { borderBottomColor: theme.border }]}>
         <TouchableOpacity onPress={handleBackPress} style={styles.backBtn} activeOpacity={0.7}>
-          <Icon name="arrow-left" size={20} color={theme.textPrimary} />
-          <Text style={[styles.backText, { color: theme.textPrimary }]}>Back</Text>
+          <HugeiconsIcon icon={ArrowLeft01Icon} size={20} color={theme.textPrimary} />
         </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: theme.textPrimary }]}>Profile</Text>
         <View style={styles.headerSpacer} />
@@ -126,7 +144,7 @@ export const ProfileScreen: React.FC<{ navigation?: any }> = ({ navigation }) =>
               activeOpacity={0.8}
             >
               <Text style={[styles.menuText, { color: theme.textPrimary }]}>Dark Theme</Text>
-              {mode === 'dark' && <Text style={[styles.checkActive, { color: theme.accent }]}>✓</Text>}
+              {mode === 'dark' && <HugeiconsIcon icon={Tick01Icon} size={16} color={theme.accent} />}
             </TouchableOpacity>
 
             <View style={[styles.divider, { backgroundColor: theme.border }]} />
@@ -137,7 +155,7 @@ export const ProfileScreen: React.FC<{ navigation?: any }> = ({ navigation }) =>
               activeOpacity={0.8}
             >
               <Text style={[styles.menuText, { color: theme.textPrimary }]}>Light Theme</Text>
-              {mode === 'light' && <Text style={[styles.checkActive, { color: theme.accent }]}>✓</Text>}
+              {mode === 'light' && <HugeiconsIcon icon={Tick01Icon} size={16} color={theme.accent} />}
             </TouchableOpacity>
           </View>
         </View>
@@ -168,7 +186,7 @@ export const ProfileScreen: React.FC<{ navigation?: any }> = ({ navigation }) =>
               <Text style={[styles.menuText, { color: theme.textPrimary }]}>Notifications</Text>
               <Switch
                 value={notificationsEnabled}
-                onValueChange={setNotificationsEnabled}
+                onValueChange={handleToggleNotifications}
                 trackColor={{ false: theme.border, true: theme.accentMuted }}
                 thumbColor={notificationsEnabled ? theme.accent : theme.textMuted}
               />
@@ -236,23 +254,17 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
   },
   backBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: spacing.xs,
-    gap: 6,
-  },
-  backText: {
-    fontFamily: fontFamilies.body,
-    fontSize: 14,
-    fontWeight: '500',
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'flex-start',
   },
   headerTitle: {
     fontFamily: fontFamilies.headingBold,
     fontSize: 18,
-    fontWeight: '600',
   },
   headerSpacer: {
-    width: 60,
+    width: 40,
   },
   container: {
     paddingHorizontal: spacing.containerPadding,
@@ -276,9 +288,8 @@ const styles = StyleSheet.create({
     marginRight: spacing.md,
   },
   avatarText: {
-    fontFamily: fontFamilies.body,
+    fontFamily: fontFamilies.headingBold,
     fontSize: 18,
-    fontWeight: '700',
   },
   userInfo: {
     flex: 1,
@@ -286,7 +297,6 @@ const styles = StyleSheet.create({
   userName: {
     fontFamily: fontFamilies.headingBold,
     fontSize: 18,
-    fontWeight: '600',
   },
   userEmail: {
     fontFamily: fontFamilies.body,
@@ -301,7 +311,6 @@ const styles = StyleSheet.create({
     fontSize: 11,
     marginBottom: spacing.xs,
     letterSpacing: 0.8,
-    fontWeight: '500',
   },
   menuCard: {
     borderRadius: radius.lg, // 24px curved radius
@@ -319,7 +328,6 @@ const styles = StyleSheet.create({
   },
   checkActive: {
     fontSize: 16,
-    fontWeight: '700',
     marginLeft: spacing.sm,
   },
   menuItem: {
@@ -353,8 +361,7 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
   },
   logoutBtnText: {
-    fontFamily: fontFamilies.body,
+    fontFamily: fontFamilies.headingBold,
     fontSize: 15,
-    fontWeight: '600',
   },
 });
